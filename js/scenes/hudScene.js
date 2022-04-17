@@ -16,8 +16,10 @@ class HudScene extends Phaser.Scene{
         let that = this;
         this.gameScene = this.scene.get('GameScene');
         this.gameScene.events.on('playerDied', this.drawLives, this);
+        this.gameScene.events.on('playerTookDamage', this.drawLives, this);
         this.gameScene.events.on('gameOver', this.gameOver, this);
         this.gameScene.events.on('scoreUpdated', this.updateScore, this);
+        this.gameScene.events.on('enemiesUpdated', this.updateEnemies, this);
         this.gameScene.events.on('extraLife', this.pickupLife, this);
 
         this.lifeImages = this.add.group();
@@ -40,7 +42,8 @@ class HudScene extends Phaser.Scene{
         });
 
 
-        this.scoreText = this.add.text(16, 8, "Score: " + score.toString(), { fontSize: '16px', fontFamily: 'FourBitRegular' });
+//        this.scoreText = this.add.text(16, 8, "Score: " + score.toString(), { fontSize: '16px', fontFamily: 'FourBitRegular' });
+        this.enemyText = this.add.text(16, 8, "Enemies: " + enemies.toString(), { fontSize: '16px', fontFamily: 'FourBitRegular' });
 
 
         // Put this last
@@ -86,6 +89,10 @@ class HudScene extends Phaser.Scene{
 
     }
 
+    updateEnemies(){
+        this.enemyText.setText("Enemies: "+ enemies.toString());
+    }
+
     pickupLife(){
 
     }
@@ -96,7 +103,7 @@ class HudScene extends Phaser.Scene{
         for(let i=0;i<lives;i++){
             let img = this.add.image(xx,(UNITSIZE/2),'heart').setScale(.5);
             this.lifeImages.add(img);
-            xx -= 32;
+            xx -= 8;
         }
     }
 

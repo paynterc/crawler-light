@@ -1,0 +1,173 @@
+class Player extends Phaser.GameObjects.Sprite {
+
+    // CALLOUT: New enemies need to have a config {'img':someImage}, especially if they are bigger than 32x32
+    constructor(scene, x, y, config = {}) {
+        super(scene, x, y, config.hasOwnProperty('img') ? config.img : 'wizard1');
+
+        this.myScene = scene;
+        this.myConfig = config;
+        this.mySetScale();
+        scene.add.existing(this);
+        scene.physics.add.existing(this);
+        this.body.setCollideWorldBounds(true);
+
+        this.anmAttack = 'wizard1Attack';
+        this.myState = STATE_EN_IDLE;
+        this.faction = 0;
+        this.myAttackFrequency = 25;
+        this.maxVelocity = MAX_SPEED;
+
+        this.init();
+        this.updateConfig();
+        this.setAnimationComplete();
+    }
+
+    setAnimationComplete(){
+        this.on('animationcomplete', function(animation, frame) {
+            if(animation.key === this.anmAttack){
+                this.myState=STATE_EN_IDLE;
+            }
+        }, this);
+    }
+
+    updateConfig(){
+        this.myAttackTimer = 0;
+        this.body.maxVelocity.setTo(this.maxVelocity); // x, y
+        this.body.drag.setTo(DRAG,DRAG);
+	    this.body.setSize(16,32)
+
+        this.play('wizard1Idle');
+
+    }
+
+    mySetScale(){
+
+    }
+
+    init() {
+        // Override this
+    }
+
+    update(time,delta){
+
+        this.myPreUpdate(time,delta);
+        if(this.myAttackTimer>0) this.myAttackTimer--;
+        this.depth=this.y;
+        switch (this.myState) {
+            case STATE_EN_IDLE:
+                this.idle(time,delta);
+                break;
+            case STATE_EN_MOVE:
+                this.walk(time,delta);
+                break;
+            case STATE_EN_HIT:
+                this.hit(time,delta);
+                break;
+            case STATE_EN_ATTACK:
+                this.attack(time,delta);
+                break;
+            case STATE_EN_DIE:
+                this.die(time,delta);
+                break;
+            default:
+                this.idle(time,delta);
+                break;
+        }
+
+
+
+        this.myPostUpdate(time,delta);
+    }
+
+    idle(time,delta){
+        this.checkInput();
+        if(this.anims.currentAnim && this.anims.currentAnim.key != 'wizard1Idle'){
+            this.play('wizard1Idle');
+        }
+    }
+
+    walk(time,delta){
+        this.checkInput();
+        if(this.anims.currentAnim && this.anims.currentAnim.key != 'wizard1Walk'){
+            this.play('wizard1Walk');
+        }
+    }
+
+    attack(time,delta){
+        this.body.setVelocity(0);
+        this.body.acceleration.x = 0;
+        this.body.acceleration.y = 0;
+        if(this.anims.currentAnim.key != this.anmAttack){
+            this.play(this.anmAttack);
+        }
+    }
+
+    checkInput(){
+        if (fireInputIsActive()) {
+            if(this.myAttackTimer<=0){
+                this.attack1();
+                this.myState=STATE_EN_ATTACK;
+            }
+        }else{
+
+            if (leftInputIsActive()) {
+                // If the LEFT key is down, set the player velocity to move left
+                this.body.acceleration.x = -ACCELERATION;
+                this.flipX=true;
+            } else if (rightInputIsActive()) {
+                // If the RIGHT key is down, set the player velocity to move right
+                this.body.acceleration.x = ACCELERATION;
+                this.flipX=false;
+            }else{
+                this.body.acceleration.x = 0;
+            }
+
+            if (upInputIsActive()) {
+                this.body.acceleration.y = -ACCELERATION;
+            } else if (downInputIsActive()) {
+                this.body.acceleration.y = ACCELERATION;
+
+            }else {
+                this.body.acceleration.y = 0;
+            }
+
+
+            if(this.body.velocity.x != 0 || this.body.velocity.y != 0){
+                this.myState=STATE_EN_MOVE;
+            }else{
+                this.myState=STATE_EN_IDLE;
+            }
+
+        }
+
+    }
+
+    attack1(){
+        if(this.myAttackTimer>0) return false;
+        this.myAttackTimer = this.myAttackFrequency;
+
+        let pointer = this.myScene.input.activePointer;
+        let A = Phaser.Math.Angle.Between(this.x,this.y,pointer.worldX,pointer.worldY);
+        let config = {faction:0,img:'bulletIce',anm:'bulletIce',initSpeed:500}
+        let bullet = new Bullet(this.myScene,this.x,this.y,A,config);
+    }
+
+
+    myPreUpdate(time,delta){
+
+    }
+
+    myPostUpdate(time,delta){
+
+    }
+
+    applyDamage(D){
+        lives-=D;
+        this.myScene.events.emit('playerTookDamage');
+
+        if(lives<=0){
+            //this.die();
+        }
+    }
+
+}
