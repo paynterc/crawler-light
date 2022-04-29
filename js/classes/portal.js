@@ -8,10 +8,14 @@ class Portal extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
         this.myScene = scene;
         this.open = false;
-        this.depth = DEPTH_PORTAL;
+        this.depth = y;
 
-        this.anm = config.hasOwnProperty('anm') ? config.anm : 'portalClosed';
-        this.anmOpen = config.hasOwnProperty('anmOpen') ? config.anm : 'portalOpen';
+        this.anm = config.anm || 'portalClosed';
+        this.anmOpen = config.anmOpen || 'portalOpen';
+        this.anmOpening = config.anmOpening || null;
+
+        this.goToLvl = config.goToLvl || "forest";
+
 		this.body.setSize(32,32);
         this.myGroup = config.hasOwnProperty('myGroup') ? config.myGroup : scene.portals;
 
@@ -19,8 +23,8 @@ class Portal extends Phaser.Physics.Arcade.Sprite {
 
         this.init();
         this.updateConfig();
-
     }
+
 
 
     init(){
@@ -30,6 +34,16 @@ class Portal extends Phaser.Physics.Arcade.Sprite {
     updateConfig(){
         this.myGroup.add(this);
         this.play(this.anm);
+        this.setAnimationComplete();
+
+    }
+
+    setAnimationComplete(){
+        this.on('animationcomplete', function(animation, frame) {
+            if(animation.key === this.anmOpening) {
+               this.play(this.anmOpen);
+            }
+        }, this);
     }
 
     onDestroy(){
@@ -47,11 +61,19 @@ class Portal extends Phaser.Physics.Arcade.Sprite {
 
     openMe(){
         this.open=true;
-        this.play(this.anmOpen);
+        if(this.anmOpening){
+            this.play(this.anmOpening);
+        }else{
+            this.play(this.anmOpen);
+        }
+
     }
 
     onEnter(){
         if(!this.open) return false;
+        this.open = false;
+
+        lvlId = this.goToLvl;
         this.myScene.restart=true;
     }
 }

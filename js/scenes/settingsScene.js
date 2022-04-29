@@ -13,7 +13,7 @@ class SettingsScene extends  Phaser.Scene{
         let that = this;
         this.bootScene = this.scene.get('BootScene');
         //TODO: Maybe create a model object and store volume level there instead of referring directly to the mediaService
-        let mediaService = this.bootScene.mediaService;
+//        let mediaService = this.bootScene.mediaService;
         this.lineMin = W/3;
         this.lineMax = W - this.lineMin;
 

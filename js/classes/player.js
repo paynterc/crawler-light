@@ -11,7 +11,16 @@ class Player extends Phaser.GameObjects.Sprite {
         scene.physics.add.existing(this);
         this.body.setCollideWorldBounds(true);
 
+        this.anmDefault = 'wizard1Idle';
+        this.anmIdle = 'wizard1Idle';
         this.anmAttack = 'wizard1Attack';
+        this.anmWalk = 'wizard1Walk';
+        this.anmRun= 'wizard1Walk';
+        this.bdyW = 16;
+        this.bdyH = 32;
+        this.bdyX = 6;
+		this.bdyY = 0;
+
         this.myState = STATE_EN_IDLE;
         this.faction = 0;
         this.myAttackFrequency = 25;
@@ -34,9 +43,9 @@ class Player extends Phaser.GameObjects.Sprite {
         this.myAttackTimer = 0;
         this.body.maxVelocity.setTo(this.maxVelocity); // x, y
         this.body.drag.setTo(DRAG,DRAG);
-	    this.body.setSize(16,32)
-
-        this.play('wizard1Idle');
+	    this.body.setSize(this.bdyW,this.bdyH);
+        this.body.setOffset(this.bdyX,this.bdyY);
+        this.play(this.anmDefault);
 
     }
 
@@ -81,15 +90,15 @@ class Player extends Phaser.GameObjects.Sprite {
 
     idle(time,delta){
         this.checkInput();
-        if(this.anims.currentAnim && this.anims.currentAnim.key != 'wizard1Idle'){
-            this.play('wizard1Idle');
+        if(this.anims.currentAnim && this.anims.currentAnim.key != this.anmIdle){
+            this.play(this.anmIdle);
         }
     }
 
     walk(time,delta){
         this.checkInput();
-        if(this.anims.currentAnim && this.anims.currentAnim.key != 'wizard1Walk'){
-            this.play('wizard1Walk');
+        if(this.anims.currentAnim && this.anims.currentAnim.key != this.anmWalk){
+            this.play(this.anmWalk);
         }
     }
 
@@ -162,9 +171,9 @@ class Player extends Phaser.GameObjects.Sprite {
     }
 
     applyDamage(D){
+        if(!D) return false
         lives-=D;
         this.myScene.events.emit('playerTookDamage');
-
         if(lives<=0){
             //this.die();
         }

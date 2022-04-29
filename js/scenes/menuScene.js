@@ -19,6 +19,8 @@ class MenuScene extends Phaser.Scene{
         this.startText.setOrigin(0.5);
 
         this.startText.setInteractive().on('pointerdown', function(pointer, localX, localY, event){
+            that.scene.launch('HudScene');
+
             that.scene.start('GameScene');
         });
     }

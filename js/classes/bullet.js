@@ -18,45 +18,57 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
 		}
 //		let gravity = config.hasOwnProperty('gravity') ? config.gravity : GRAVITY;
 //		this.body.setGravityY(GRAVITY);
-        this.faction = config.hasOwnProperty('faction') ? config.faction : 1;
+        this.faction = config.hasOwnProperty('faction') ? config.faction : 0;
         this.damage = config.hasOwnProperty('damage') ? config.damage : 1;
         this.allowGrav = config.hasOwnProperty('allowGrav') ? config.allowGrav : false;
         this.initSpeed = config.hasOwnProperty('initSpeed') ? config.initSpeed : 128;
         this.accelerate = config.hasOwnProperty('accelerate') ? config.accelerate : false;
         this.destroyAfterAnim = config.hasOwnProperty('destroyAfterAnim') ? config.destroyAfterAnim : false;
         this.destroyOnHit = config.hasOwnProperty('destroyOnHit') ? config.destroyOnHit : true;
+        this.destroyOnHitWall = config.hasOwnProperty('destroyOnHitWall') ? config.destroyOnHitWall : true;
         this.lifeSpan = config.hasOwnProperty('lifeSpan') ? config.lifeSpan : 600;
         this.destroyOnSplat = config.hasOwnProperty('destroyOnSplat') ? config.destroyOnSplat : true;
-        let myGroup = config.hasOwnProperty('myGroup') ? config.myGroup : scene.bullets;
+        this.orgX = config.orgX || 0;
+        this.orgY = config.orgY || 0;
+
+
+        this.myGroup = config.hasOwnProperty('myGroup') ? config.myGroup : scene.bullets;
 
 
         this.body.setAllowGravity(this.allowGrav);
 
 
         this.rotation = angle;// angle is in radians
-        // this.rotation = angle * (Math.PI/180); // convert degrees to radians
+        // this.rotation = angle * (Math.PI/180); // convert degrees to radians if needed
 
         const vec = new Phaser.Math.Vector2();
         vec.setToPolar(angle, this.initSpeed);
         this.body.velocity = vec;
 
+        this.hitIt=[];//keep track of entities i have hit. only hit them once.
 
-//        if(this.accelerate){
-//            this.body.acceleration = vec;
-//        }else{
-//            this.body.velocity = vec;
-//        }
+        this.setDepth(100000);
+        scene.updateGroup.add(this);
+
 
         this.init();
-        this.setDepth(100000);
-        myGroup.add(this);
-        scene.updateGroup.add(this);
+        this.updateConfig();
 
     }
 
 
     init(){
 
+    }
+
+    updateConfig(){
+        //this.setOrigin(this.orgX,this.orgY);
+        this.myGroup.add(this);
+
+    }
+
+    hasHit(target){
+        return this.hitIt.indexOf(target) > -1;
     }
 
     onDestroy(){

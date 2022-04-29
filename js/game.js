@@ -1,4 +1,4 @@
-var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, lives, enemies, gridCenterX, gridCenterY;
+var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, lives, enemies, gridCenterX, gridCenterY, items, missions, gameEvents, tips, lvlId, mediaService;
 const W = 480;
 const H = 288;
 const PW = W*4;//physics world width
@@ -13,6 +13,7 @@ const UNITSIZE = 32;
 const WALLSIZE = UNITSIZE*2;
 const WALL = 1;
 const FLOOR = 0;
+const OCCUPIED = 2;
 
 // Enemy states
 const STATE_EN_IDLE = 0;
@@ -73,6 +74,11 @@ var config = {
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    plugins: {
+        global: [
+            { key: 'RandomNamePlugin', plugin: RandomNamePlugin, start:true }
+        ]
     },
     render: {
         pixelArt: true,

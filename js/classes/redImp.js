@@ -2,7 +2,6 @@ class RedImp extends Enemy {
 
 
     init() {
-        this.anmDefault = 'redImpIdle';
         this.anmWalk = 'redImpWalk';
         this.anmRun = 'redImpWalk';
         this.anmTell = 'redImpTell';
@@ -11,10 +10,10 @@ class RedImp extends Enemy {
         this.agroRange=256;
         this.hp=1;
 
-	    this.body.setSize(12,12)
+	    this.body.setSize(12,12);
 		this.body.setOffset(2,18)
 
-        this.startMovement();
+        //this.startMovement();
     }
 
 
