@@ -1,4 +1,4 @@
-var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, lives, enemies, gridCenterX, gridCenterY, items, missions, gameEvents, tips, lvlId, mediaService;
+var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, gold, lives, enemies, gridCenterX, gridCenterY, missions, gameEvents, tips, lvlId, mediaService, soldLamb, path;
 const W = 480;
 const H = 288;
 const PW = W*4;//physics world width
@@ -63,8 +63,20 @@ const makeGrid = function(W,H){
 }
 
 const g2Px = function(n){
-    return n*WALLSIZE + (WALLSIZE/2)
+    return n*WALLSIZE;
+    //+ (WALLSIZE/2)
 }
+
+const items = [
+{id:'lamb',img:'lambFace',name:"lamb",price:5},
+{id:'heartCharm',img:'heartCharm',name:"Heart Charm",price:50,description:"Gives one health on entering a new level."},
+{id:'braceletOfWinds',img:'braceletOfWinds',name:"Bracelet of Winds",price:50,description:"Adds knockback to attacks.",anm:'braceletOfWinds'},
+{id:'mushroom',img:'mushroom',name:"mushroom",price:5},
+{id:'snailshell',img:'snailShell',name:"snail shell",price:5},
+{id:'starEmber',img:'fireball',name:"Fire Wisp",price:15},
+];
+
+
 
 // To access game: this.sys.game
 var config = {
@@ -77,7 +89,9 @@ var config = {
     },
     plugins: {
         global: [
-            { key: 'RandomNamePlugin', plugin: RandomNamePlugin, start:true }
+            { key: 'RandomNamePlugin', plugin: RandomNamePlugin, start:true },
+            { key: 'BackpackPlugin', plugin: BackpackPlugin, start:true, data:{maxSlots:6,itemLib:items} },
+            { key: 'StorePlugin', plugin: StorePlugin, start:false,data:{yPos:160} },
         ]
     },
     render: {

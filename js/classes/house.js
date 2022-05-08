@@ -1,4 +1,4 @@
-class Loot extends Phaser.Physics.Arcade.Sprite {
+class House extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, config = {}) {
 
         super(scene, x, y, config.hasOwnProperty('img') ? config.img : 'square');
@@ -11,7 +11,6 @@ class Loot extends Phaser.Physics.Arcade.Sprite {
         this.invAdd = config.invAdd || null
         this.anm = config.anm || null;
 
-        scene.catchables.add(this);
 
         this.init();
         this.updateConfig();
@@ -25,15 +24,6 @@ class Loot extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
-
-    onPickup(player){
-
-    }
-
-    catchIt(player){
-        this.myScene.events.emit('caughtCatchable',this);
-        this.onPickup(player);
-    }
 
     update(time,delta){
 

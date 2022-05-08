@@ -22,8 +22,9 @@ class Enemy extends Phaser.GameObjects.Sprite {
         // Config Items
         this.pathReactTime = 120;
         if(config.hasOwnProperty('bdyW') && config.hasOwnProperty('bdyH')){
-            this.body.setSize(config.bdyW,config.bdyH)
+            this.body.setSize(config.bdyW,config.bdyH);
         }
+
         this.defaultAcc = config.hasOwnProperty('defaultAcc') ? config.defaultAcc : 25;
         this.maxVelocity = config.hasOwnProperty('maxVelocity') ? config.maxVelocity : 50;
         this.invAdd = config.hasOwnProperty('invAdd') ? config.invAdd : false;// add to inventory on death
@@ -61,6 +62,10 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     }
 
+    getType(){
+        return this.myConfig.img;
+    }
+
     setAnimationComplete(){
         this.on('animationcomplete', function(animation, frame) {
             if(animation.key === this.anmTell) {
@@ -88,7 +93,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
         this.bulletConfig = this.myConfig.bulletConfig || {img:'fireball',anm:'fireball',initSpeed:500,damage:this.attackDamage};
         this.bulletConfig.faction = this.faction;
-
+        this.maxHp=this.hp;
         this.startMovement();
     }
 
@@ -157,7 +162,10 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     destroyIt(){
         enemies--;
+        gold++;
+        this.myScene.events.emit('enemyDied',this.texture.key,this.x,this.y);
         this.myScene.events.emit('enemiesUpdated');
+
         this.onDestroy();
         this.destroy();
     }
@@ -169,6 +177,8 @@ class Enemy extends Phaser.GameObjects.Sprite {
             this.myState = STATE_EN_MOVE;
         }
     }
+
+
 
     walk(time,delta){
         this.myState = STATE_EN_MOVE;
@@ -285,6 +295,13 @@ class Enemy extends Phaser.GameObjects.Sprite {
             this.die();
         }
 
+    }
+
+    applyKb(angle,speed){
+        if(speed<=0) return false;
+        const vec = new Phaser.Math.Vector2();
+        vec.setToPolar(angle  * (Math.PI/180), speed);
+        this.body.velocity = vec;
     }
 
     mySetScale(){

@@ -25,7 +25,6 @@ class GameScene extends Phaser.Scene {
 //        this.bootScene = this.scene.get('BootScene');
         this.hudScene = this.scene.get('HudScene');
 
-        console.log('preload done');
     }
 
     create()
@@ -33,8 +32,17 @@ class GameScene extends Phaser.Scene {
         let that = this;
         this.cameras.main.setBackgroundColor(0x000000);
         this.addAnimations();
+        this.backpack = this.plugins.get('BackpackPlugin');
+        this.backpack.thing = "bar";
+        this.store = this.plugins.get('StorePlugin');
+        this.namePlugin = this.plugins.get('RandomNamePlugin');
+        let name = this.namePlugin.getName();
+        console.log('rname',name);
 
         this.restart=false;
+
+        this.updatePath();// check the current path, see if we get a special level
+
 
         this.blocks = this.add.group();
         this.enemies = this.add.group();
@@ -43,12 +51,11 @@ class GameScene extends Phaser.Scene {
         this.catchables = this.add.group();
         this.mobs = this.add.group();
         this.npcs = this.add.group();
+        this.vendors = this.add.group();
         this.updateGroup = this.add.group();
+        this.graphics = this.add.graphics();
 
 //        this.load.plugin('RandomNamePlugin', 'plugin/randomNamePlugin.js', true);
-        this.namePlugin = this.plugins.get('RandomNamePlugin');
-        let name = this.namePlugin.getName();
-        console.log('rname',name);
 
          this.bg0 = this.add.tileSprite(
              0,
@@ -57,6 +64,7 @@ class GameScene extends Phaser.Scene {
              H*4,
              'grassBg'
          ).setOrigin(0,0).setScrollFactor(1,1).setDepth(DEPTH_BG);
+
 
 
         // Use PW and PH (physics width, physics height) if the physics world is bigger than the window
@@ -68,8 +76,7 @@ class GameScene extends Phaser.Scene {
         gridCenterY = Math.floor(this.gameGrid[0].length/2);
 
 
-
-        console.log('restar lvl',lvlId);
+//        lvlId="boss1";
         let plrX=g2Px(gridCenterX);//in pixels
         let plrY=g2Px(gridCenterY);
         if(lvlId=="boss1"){
@@ -80,19 +87,23 @@ class GameScene extends Phaser.Scene {
 
             this.makeMaze();
             let fp = this.add.sprite(plrX,plrY,'forestPortalUsed');
+            this.gameGrid[gridCenterX][gridCenterY] = OCCUPIED;
             fp.depth = plrY;
 
             this.placeEnemies();
-            this.placePortal();
-            this.placeBossPortal();
+            this.placePortal('moon');
+            this.placePortal('gem');
+            this.placePortal('flame');
+            //this.placeBossPortal();
             this.questItemPlaced=false;
             this.placeQuestItems();
             this.placeNpc();
-            //this.placeMobs();
+            this.placeVendor();
+            this.placeMobs();
         }
 
-    //        this.player = new Player(this,plrX,plrY+16);
-        this.player = new Rogue(this,plrX,plrY+16);
+            this.player = new Player(this,plrX,plrY+16);
+//        this.player = new Rogue(this,plrX,plrY+16);
 
         this.checkEnemies();
         this.cameras.main.startFollow(this.player);
@@ -109,47 +120,64 @@ class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.catchables, this.hitCatchable,false,this);
         this.physics.add.overlap(this.player, this.npcs, this.hitNpc,false,this);
         this.physics.add.overlap(this.player, this.portals, this.playerEnterPortal,false,this);
+        this.physics.add.overlap(this.player, this.vendors, this.hitVendor,false,this);
         this.makeEmitters();
 
 
         this.addEvents();
         this.applyLevelBonuses();
 
+//         touching or interacting
+        this.overlapping = false;
+        this.overlapCount=0;
+
+        this.events.emit('newLevel');
+
     }
+
+    updatePath(){
+        let pathString = path.join();
+        if(pathString=="flame,flame,moon"){
+            lvlId="boss1";
+        }else{
+            lvlId="forest";
+        }
+    }
+
 
     addEvents(){
 
         this.events.once('shutdown', this.shutDownListener,this);
         this.events.on('enemiesUpdated', this.checkEnemies, this);
+        this.events.on('enemyDied', this.enemyDied, this);
 //        gameEvents.on('test', this.testEvent, this);
 
     }
 
     shutDownListener(){
         this.events.off('enemiesUpdated', this.checkEnemies);
+        this.events.off('enemyDied', this.enemyDied);
+        localStorage.setItem('gold',gold);
 //        gameEvents.off('test', this.testEvent);
     }
 
     findInventoryItem(itemId){
-        return this.hudScene.findInventoryItem(itemId);
+        return this.backpack.findItemById(itemId);
     }
     removeInventoryItem(itemId){
-        return this.hudScene.removeInventoryItem(itemId);
+        return this.backpack.removeItemById(itemId);
     }
     addInventoryItem(itemId){
-        return this.hudScene.addInventoryItem(itemId);
+        return this.backpack.addItemById(itemId);
     }
 
     applyLevelBonuses(){
-        let heartCharm = this.findInventoryItem("heartCharm");
-        if(heartCharm){
-            lives++;
+        let heartCharms = this.backpack.findAllItemsOfId("heartCharm");
+        if(heartCharms){
+            lives += heartCharms.length;
+            if(lives>30) lives = 30;
             this.events.emit('playerTookDamage');
         }
-//        let heartCharms = this.hudScene.findAllItemsOfId("heartCharm");
-//        if(heartCharms){
-//            lives += heartCharms.length;
-//        }
     }
 
     sceneRestart(){
@@ -170,7 +198,34 @@ class GameScene extends Phaser.Scene {
     }
 
     playerEnterPortal(player,portal){
-        portal.onEnter();
+        if(portal.open){
+                this.overlapping = true;
+                if(this.overlapCount>=350){
+                    this.graphics.clear();
+                    portal.onEnter();
+                }
+        }
+
+
+    }
+
+    enemyDied(enemyKey,xx,yy){
+
+            if(enemyKey=='mogus'){
+                new Loot(this,xx,yy,{invAdd:'starEmber',img:'fireball',anm:'fireball'});
+
+
+                let goboMission = missions.filter(function(m) { return m.complete === false && m.started===true && m.id=="buidFire"; });
+                if(goboMission.length>0){
+
+                    let odds = 3;
+                    if(Phaser.Math.Between(1,odds)===odds){
+                        new Loot(this,xx,yy,{invAdd:'starEmber',img:'fireball',anm:'fireball'});
+                    }
+                }
+            }
+
+            this.checkEnemies();
     }
 
     checkEnemies(){
@@ -221,24 +276,43 @@ class GameScene extends Phaser.Scene {
         npc.interact();
     }
 
+    hitVendor(player,npc)
+    {
+        if(npc.interacting) return false;
+        this.overlapping = true;
+        if(this.overlapCount>=350){
+            npc.interact();
+        }
+    }
+
     showText(txt){
         this.scene.pause();
         this.hudScene.showText(txt);
+    }
+
+    showStore(){
+        if(!this.store) return false;
+        this.scene.pause();
+        this.backpack.hide();
+        this.events.emit('storeOpen');
+//        this.sys.game.events.emit('testGameEvent');
+        this.store.open(this.backpack.items,gold);
+
     }
 
     bulletHitEnemy(bullet,enemy)
     {
         //emitter.emit('test', 200);
         if(bullet.faction===0 && !bullet.hasHit(enemy)){
-
+            enemy.applyKb(bullet.angle,bullet.kb);
             enemy.applyDamage(bullet.damage);
+
             this.emitter1.emitParticleAt(bullet.x, bullet.y, 10);
             if(bullet.destroyOnHit){
                 bullet.destroyIt();
             }else{
                 bullet.hitIt.push(enemy);
             }
-
         }
 
     }
@@ -266,8 +340,18 @@ class GameScene extends Phaser.Scene {
 
     update(time,delta)
     {
+
         if(this.restart){
-            this.sceneRestart()
+            this.sceneRestart();
+        }
+
+        if(this.overlapping){
+            this.overlapCount+=3;
+            this.graphics.visible=true;
+            this.drawTimer();
+        }else{
+            this.overlapCount=0;
+            this.graphics.visible=false;
         }
 
         this.player.update(time,delta);
@@ -275,6 +359,8 @@ class GameScene extends Phaser.Scene {
         this.updateGroup.children.each((e)=>{
             e.update(time,delta);
         });
+
+        this.overlapping=false;
 
     }
     
@@ -324,6 +410,9 @@ class GameScene extends Phaser.Scene {
     makeBossRoom1(){
             let posX = gridCenterX;
             let posY = gridCenterY;
+            this.events.emit('bossArrives',"BOSS SWORD");
+            this.events.emit('bossHealthUpdate',1);
+
             this.makeRoom(posX,posY,7,7);
             let boss = new BossSword(this,g2Px(posX),g2Px(posY),{img:'bossSword',});
             this.buildRoom();
@@ -335,9 +424,24 @@ class GameScene extends Phaser.Scene {
             for (var j=0; j<col.length; j++) {
                 if(this.gameGrid[i][j]===WALL){
                     let block = this.physics.add.sprite( i*WALLSIZE ,j*WALLSIZE,'hedge');
-                    block.setOrigin(0);
+
                     block.body.setImmovable();
+                    block.visible=false;
                     this.blocks.add(block);
+
+                }
+            }
+        }
+
+
+        for (var i=0; i<this.gameGrid.length; i++) {
+            let col = this.gameGrid[i];
+            for (var j=0; j<col.length; j++) {
+                if(this.gameGrid[i][j]===WALL){
+                    let rA = Phaser.Math.Between(0,359);
+                    let img = this.add.image(i*WALLSIZE,j*WALLSIZE,'bushFall').setDepth(10000+(j*WALLSIZE)).setAngle(rA);
+//                    let img = this.add.image(i*WALLSIZE,j*WALLSIZE,'bush').setDepth(10000+(j*WALLSIZE)).setAngle(rA);
+
                 }
             }
         }
@@ -364,6 +468,9 @@ class GameScene extends Phaser.Scene {
 
     placeEnemies(){
         // up to 3 groups of enemies.
+        //let gc = this.findSpotOnGrid(false);
+        //new Giant(this, g2Px(gc[0]), g2Px(gc[1]), {img:'giant'});
+
         let E=3;
         for (var i=0; i<this.gameGrid.length; i++) {
             let col = this.gameGrid[i];
@@ -411,7 +518,7 @@ class GameScene extends Phaser.Scene {
 
             theMission = incompletMissions[Phaser.Math.Between(0,incompletMissions.length-1)];
             let RC = this.findSpotOnGrid();
-            new Npc(this,g2Px(RC[0]),g2Px(RC[1]),{img:theMission.npc,missionId:theMission.id});
+            new Npc(this,g2Px(RC[0]),g2Px(RC[1]),{ img:theMission.npc,missionId:theMission.id,anmComplete:theMission.anmComplete });
 
         }
 
@@ -427,9 +534,12 @@ class GameScene extends Phaser.Scene {
 
     placeMobs(){
         let num = Phaser.Math.Between(0,2);
+        let mobs = ['niceGhost','kitty'];
+
         for(var i=0;i<=num;i++){
             let RC = this.findSpotOnGrid(false);
-            new Mob(this, g2Px(RC[0]), g2Px(RC[1]), {anmDefault:'blueBeanWalk',defaultAcc:5,maxVelocity:8} );
+            let rndMob = mobs[Phaser.Math.Between(0,mobs.length-1)];
+            new Mob(this, g2Px(RC[0]), g2Px(RC[1]), {anmDefault:rndMob,defaultAcc:5,maxVelocity:8} );
         }
     }
 
@@ -438,8 +548,8 @@ class GameScene extends Phaser.Scene {
         for(var i=0;i<missions.length;i++){
             let m=missions[i];
             if( m.started && !m.complete ){
-                let hasItem = this.findInventoryItem(m.itemRequired);
-                if(hasItem) return false;
+
+                if( this.backpack.hasItem(m.itemRequired) ) continue;
                 // chance for mission item to appear.
                 let odds = 2;
                 if(Phaser.Math.Between(1,odds)===odds){
@@ -454,11 +564,12 @@ class GameScene extends Phaser.Scene {
                         new Loot(this,g2Px(RC[0]),g2Px(RC[1]),{invAdd:'snailshell',img:'snailShell'});
                     }
                     this.questItemPlaced=true;
-                    return true;
+                    //return true;
                 }
 
             }
         }
+
     }
 
     findSpotOnGrid(safePlayer=true){
@@ -491,16 +602,27 @@ class GameScene extends Phaser.Scene {
 
 
 
-    placePortal(){
+    placePortal(type){
 
         // try to place it far from player
 
         let RC = this.findSpotOnGrid();
-        new Portal(this,g2Px(RC[0]),g2Px(RC[1]));
+        let P = new Portal(this,g2Px(RC[0]),g2Px(RC[1]),{type:type});
         this.gameGrid[RC[0]][RC[1]] = OCCUPIED;
         return true;
 
 
+    }
+
+    placeVendor(){
+        let odds = 3;
+        if(this.backpack.isFull() || Phaser.Math.Between(0,odds)===odds){
+                let RC = this.findSpotOnGrid();
+                new Vendor(this,g2Px(RC[0]),g2Px(RC[1]));
+                this.gameGrid[RC[0]][RC[1]] = OCCUPIED;
+                return true;
+        }
+        return false;
     }
 
     placeBossPortal(){
@@ -532,8 +654,8 @@ class GameScene extends Phaser.Scene {
     skythBugPack(xx,yy){
         let num = Phaser.Math.Between(1,6);
         for(let i=0;i<=num;i++){
-            let xo = Phaser.Math.Between(0,16) - 16;
-            let yo = Phaser.Math.Between(0,16) - 16;
+            let xo = Phaser.Math.Between(0,16) - 24;
+            let yo = Phaser.Math.Between(0,16) - 24;
             this.makeSkythBug(xx+xo,yy+yo);
         }
 
@@ -577,7 +699,7 @@ class GameScene extends Phaser.Scene {
             anmTell:'skythBugTell',
             anmAttack:'skythBugAttack',
             anmDie:'skythBugDie',
-            attackVelocity:200,
+            attackVelocity:250,
             agroRange:225,
             bdyW:16,
             bdyH:20,
@@ -629,4 +751,12 @@ class GameScene extends Phaser.Scene {
             new Enemy(this,xx,yy,mConfig);
         }
 
+
+        drawTimer(){
+            this.graphics.clear();
+            this.graphics.depth=1000000;
+            this.graphics.fillStyle(0xffffff, .65);
+            this.graphics.slice(this.player.x, this.player.y-32, 16, Phaser.Math.DegToRad(Phaser.Math.DegToRad(1)), Phaser.Math.DegToRad(this.overlapCount), true);
+            this.graphics.fillPath();
+        }
 }

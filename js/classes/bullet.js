@@ -1,7 +1,7 @@
 class Bullet extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, angle, config = {}) {
 
-        super(scene, x, y, config.hasOwnProperty('img') ? config.img : 'square');
+        super(scene, x, y, config.hasOwnProperty('img') ? config.img : 'fireball');
         this.setScale(config.hasOwnProperty('scale') ? config.scale : 1);
 
         scene.add.existing(this);
@@ -30,6 +30,7 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
         this.destroyOnSplat = config.hasOwnProperty('destroyOnSplat') ? config.destroyOnSplat : true;
         this.orgX = config.orgX || 0;
         this.orgY = config.orgY || 0;
+        this.kb = config.kb || 0;
 
 
         this.myGroup = config.hasOwnProperty('myGroup') ? config.myGroup : scene.bullets;

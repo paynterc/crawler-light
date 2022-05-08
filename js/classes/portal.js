@@ -9,7 +9,7 @@ class Portal extends Phaser.Physics.Arcade.Sprite {
         this.myScene = scene;
         this.open = false;
         this.depth = y;
-
+        this.type = config.type || null;
         this.anm = config.anm || 'portalClosed';
         this.anmOpen = config.anmOpen || 'portalOpen';
         this.anmOpening = config.anmOpening || null;
@@ -35,6 +35,14 @@ class Portal extends Phaser.Physics.Arcade.Sprite {
         this.myGroup.add(this);
         this.play(this.anm);
         this.setAnimationComplete();
+        if(this.type=='moon'){
+            this.myScene.add.image(this.x,this.y-24,'emblemMoon').setDepth(this.depth+10000);
+        }else if(this.type=='gem'){
+            this.myScene.add.image(this.x,this.y-24,'emblemGem').setDepth(this.depth+10000);
+        }else if(this.type=='flame'){
+            this.myScene.add.image(this.x,this.y-24,'emblemFlame').setDepth(this.depth+10000);
+        }
+
 
     }
 
@@ -74,6 +82,11 @@ class Portal extends Phaser.Physics.Arcade.Sprite {
         this.open = false;
 
         lvlId = this.goToLvl;
+
+        if(path.length>2){
+            path=[];
+        }
+        path.push(this.type);
         this.myScene.restart=true;
     }
 }

@@ -25,6 +25,14 @@ class BootScene extends Phaser.Scene{
         this.load.image('invis64', 'img/invis64.png');
         this.load.image('laser', 'img/laser.png');
         this.load.image('heartCharm', 'img/heartCharm.png');
+        this.load.image('coin', 'img/coin.gif');
+        this.load.image('redBolt', 'img/lightningBolt.png');
+        this.load.image('bush', 'img/bush.png');
+        this.load.image('bushFall', 'img/BushFall.png');
+        this.load.image('vendor', 'img/vendor.png');
+        this.load.image('emblemMoon', 'img/EmblemMoon.png');
+        this.load.image('emblemGem', 'img/EmblemGem.png');
+        this.load.image('emblemFlame', 'img/EmblemFlame.png');
 
         // Spritesheets
         this.load.spritesheet('wizard1', 'img/wizard1.png',{ frameWidth: 32, frameHeight: 32 });
@@ -35,6 +43,7 @@ class BootScene extends Phaser.Scene{
         this.load.spritesheet('redImp', 'img/redImp.png',{ frameWidth: 16, frameHeight: 32 });
         this.load.spritesheet('bulletIce', 'img/bulletIce.png',{ frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('forestPortal', 'img/forestPortal.png',{ frameWidth: 64, frameHeight: 64 });
+
         this.load.spritesheet('lamb', 'img/lamb.png',{ frameWidth: 24, frameHeight: 24 });
         this.load.spritesheet('spookyGhost', 'img/ozzySpookyGhost.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('minionSword', 'img/parker_minionSword.png',{ frameWidth: 32, frameHeight: 32 });
@@ -47,8 +56,13 @@ class BootScene extends Phaser.Scene{
         this.load.spritesheet('rogue', 'img/Alistair_NinjaAttack7.png',{ frameWidth: 220, frameHeight: 60 });
         this.load.spritesheet('skythBug', 'img/skythBug.png',{ frameWidth: 18, frameHeight: 18 });
         this.load.spritesheet('skythBugDying', 'img/skythBugDying.png',{ frameWidth: 18, frameHeight: 18 });
-        this.load.spritesheet('bossSword', 'img/bossSword.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('bossSword', 'img/bossSword2.png',{ frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('bossPortal', 'img/bossPortal1.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('niceGhost', 'img/Ghost.png',{ frameWidth: 60, frameHeight: 60 });
+        this.load.spritesheet('kitty', 'img/kitty.png',{ frameWidth: 24, frameHeight: 24 });
+        this.load.spritesheet('giant', 'img/Giant.png',{ frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('goboFire', 'img/goboFire.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('braceletOfWinds', 'img/braceletofwinds.png',{ frameWidth: 32, frameHeight: 32 });
 
         // Audio
         this.load.audio('theme1', 'audio/music/Mushrooms.mp3');
@@ -73,22 +87,21 @@ class BootScene extends Phaser.Scene{
 
         lives = 10;
         score = 0;
+        gold = parseInt(localStorage.getItem('gold')) || 0;;
         enemies = 0;
         lvlId = "forest";
+        soldLamb=false;
+        path=[];//keep track of the portals passed through
 //        maxInventory = 6;
 //        inventory = [];
 
+
         tips = [
-        {shown:false,txt:"Something has put a curse on the forest and now it keeps changing. There are three villages, but the paths to them have been lost and people can't find their way home. Can you help find the villages?"},
-        {shown:false,txt:"The portals won't open until you defeat all the monsters in this part of the forest."},
-        {shown:false,txt:"There are people in the forest who need help. Some of them may have rewards for you."}
+            {shown:false,txt:"Something has put a curse on the forest and now it keeps changing. There are three villages, but the paths to them have been lost and people can't find their way home. Can you help find the villages?"},
+            {shown:false,txt:"The portals won't open until you defeat all the monsters in this part of the forest."},
+            {shown:false,txt:"There are people in the forest who need help. Some of them may have rewards for you."}
         ];
 
-        items = [{id:'lamb',img:'lambFace',name:"lamb"},
-        {id:'heartCharm',img:'heartCharm',name:"Heart Charm"},
-        {id:'mushroom',img:'mushroom',name:"mushroom"},
-        {id:'snailshell',img:'snailShell',name:"snail shell"},
-        ];
 
         // BE SURE ALL MISSION ITEMS ARE IN THE ITEMS LIST ABOVE
         missions = [
@@ -103,7 +116,7 @@ class BootScene extends Phaser.Scene{
             {
                 id:'witchMushroom',npc:'witch',started:false,complete:false
                 ,itemRequired:"mushroom"
-                ,itemGiven:"heart"
+                ,itemGiven:"heartCharm"
                 ,txtStart:"I need one mushroom. If you bring me one I'll give you a potion.."
                 ,txtActive:"I still need that mushroom."
                 ,txtComplete:"Thanks for the mushroom. Here's your potion."
@@ -111,11 +124,20 @@ class BootScene extends Phaser.Scene{
               {
                   id:'lostShell',npc:'snalGuy',started:false,complete:false
                   ,itemRequired:"snailshell"
-                  ,itemGiven:"heart"
+                  ,itemGiven:"heartCharm"
                   ,txtStart:"Hi, I have lost my other shell. Can you find it? I will give you 100 coins."
                   ,txtActive:"Did you find my shell?"
                   ,txtComplete:"Thanks! Here's your gold."
-               }
+               },
+             {
+                 id:'buidFire',npc:'goboFire',npcName:'Gobo',started:false,complete:false
+                 ,itemRequired:"starEmber"
+                 ,itemGiven:"heartCharm"
+                 ,txtStart:"I don't have any way to light my campfire. Can you get a fire wisp from a mogus and bring it to me."
+                 ,txtActive:"I still can't light this fire."
+                 ,txtComplete:"Finally! Here, take this magic charm."
+                 ,anmComplete:'goboFireLit'
+              }
 
         ];
 
@@ -125,6 +147,13 @@ class BootScene extends Phaser.Scene{
         mediaService.setMusic('theme1');
 
         animConfigs = {};
+        animConfigs.goboFireOut = {
+            key: 'goboFireLit',
+            frames: this.anims.generateFrameNumbers('goboFire', { start: 0, end: 1, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+
         animConfigs.skythBugWalk = {
             key: 'skythBugWalk',
             frames: this.anims.generateFrameNumbers('skythBug', { start: 0, end: 1, first: 0 }),
@@ -133,9 +162,9 @@ class BootScene extends Phaser.Scene{
         };
         animConfigs.skythBugTell = {
             key: 'skythBugTell',
-            frames: this.anims.generateFrameNumbers('skythBug', { start: 0, end: 1, first: 0 }),
-            frameRate: 2,
-            repeat: 0
+            frames: this.anims.generateFrameNumbers('skythBug', { start: 2, end: 2, first: 2 }),
+            frameRate: 4,
+            repeat: 1
         };
         animConfigs.skythBugAttack = {
             key: 'skythBugAttack',
@@ -254,15 +283,21 @@ class BootScene extends Phaser.Scene{
         };
         animConfigs.bossSwordTell = {
             key: 'bossSwordTell',
-            frames: this.anims.generateFrameNumbers('bossSword', { start: 3, end: 3, first: 3 }),
-            frameRate: 2,
-            repeat: 0
+            frames: this.anims.generateFrameNumbers('bossSword', { start: 3, end: 6, first: 3 }),
+            frameRate: 12,
+            repeat: 2
         };
         animConfigs.bossSwordAttack = {
             key: 'bossSwordAttack',
-            frames: this.anims.generateFrameNumbers('bossSword', { start: 11, end: 14, first: 0 }),
-            frameRate: 12,
+            frames: this.anims.generateFrameNumbers('bossSword', { start: 15, end: 18, first: 15 }),
+            frameRate: 18,
             repeat: 5
+        };
+        animConfigs.bossSwordLightning = {
+            key: 'bossSwordLightning',
+            frames: this.anims.generateFrameNumbers('bossSword', { start: 8, end: 13, first: 8 }),
+            frameRate: 12,
+            repeat: 15
         };
 
 
@@ -320,6 +355,8 @@ class BootScene extends Phaser.Scene{
             frameRate: 0,
             repeat: 0
         };
+
+
 
         animConfigs.portalClosedBoss = {
             key: 'portalClosedBoss',
@@ -434,6 +471,43 @@ class BootScene extends Phaser.Scene{
             frameRate: 12,
             repeat: -1
         };
+        animConfigs.niceGhost = {
+            key: 'niceGhost',
+            frames: this.anims.generateFrameNumbers('niceGhost', { start: 0, end: 14, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.kitty = {
+            key: 'kitty',
+            frames: this.anims.generateFrameNumbers('kitty', { start: 0, end: 2, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.giantWalk = {
+            key: 'giantWalk',
+            frames: this.anims.generateFrameNumbers('giant', { start: 0, end: 18, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.giantTell = {
+            key: 'giantTell',
+            frames: this.anims.generateFrameNumbers('giant', { start: 0, end: 0, first: 0 }),
+            frameRate: 8,
+            repeat: 5
+        };
+        animConfigs.giantAttack = {
+            key: 'giantAttack',
+            frames: this.anims.generateFrameNumbers('giant', { start: 0, end: 18, first: 0 }),
+            frameRate: 36,
+            repeat: 3
+        };
+        animConfigs.braceletOfWinds = {
+            key: 'braceletOfWinds',
+            frames: this.anims.generateFrameNumbers('braceletOfWinds', { start: 0, end: 3, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+
         this.scene.start('MenuScene');
     }
 

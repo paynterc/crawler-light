@@ -13,6 +13,7 @@ class Npc extends Phaser.GameObjects.Sprite {
 
         this.anmDefault = config.hasOwnProperty('anmDefault') ? config.anmDefault : 'emyIdle';
         this.anmIdle = config.hasOwnProperty('anmIdle') ? config.anmIdle : this.anmDefault;
+        this.anmComplete = config.anmComplete || null;
         this.missionId = config.missionId || false;
         this.mission = null;
 
@@ -52,9 +53,15 @@ class Npc extends Phaser.GameObjects.Sprite {
                     this.myScene.removeInventoryItem(this.mission.itemRequired);
                     this.myScene.addInventoryItem(this.mission.itemGiven);
                     this.mission.complete=true;
+                    if(this.anmComplete){this.play(this.anmComplete)}
                     this.myScene.showText(this.mission.txtComplete);
+
                 }else{
-                    this.myScene.showText(this.mission.txtActive);
+                    if(this.mission.id=='lostLamb' && soldLamb){
+                        this.myScene.showText("I heard you sold my lamb. I'm not happy about that.");
+                    }else{
+                        this.myScene.showText(this.mission.txtActive);
+                    }
                 }
             }
         }

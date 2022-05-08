@@ -20,6 +20,7 @@ class Player extends Phaser.GameObjects.Sprite {
         this.bdyH = 32;
         this.bdyX = 6;
 		this.bdyY = 0;
+		this.xOff = 0;
 
         this.myState = STATE_EN_IDLE;
         this.faction = 0;
@@ -154,13 +155,23 @@ class Player extends Phaser.GameObjects.Sprite {
     attack1(){
         if(this.myAttackTimer>0) return false;
         this.myAttackTimer = this.myAttackFrequency;
-
+        let config = {faction:0,img:'bulletIce',anm:'bulletIce',initSpeed:500}
         let pointer = this.myScene.input.activePointer;
         let A = Phaser.Math.Angle.Between(this.x,this.y,pointer.worldX,pointer.worldY);
-        let config = {faction:0,img:'bulletIce',anm:'bulletIce',initSpeed:500}
-        let bullet = new Bullet(this.myScene,this.x,this.y,A,config);
+        this.fireBullet(A,config);
     }
 
+    fireBullet(angle,config){
+
+        let dir = this.flipX ? -1 : 1;
+
+        let bullet = new Bullet(this.myScene,this.x + (this.xOff*dir),this.y,angle,config);
+
+        if(this.myScene.backpack.hasItem("braceletOfWinds")){
+            bullet.kb += 100;
+        }
+
+    }
 
     myPreUpdate(time,delta){
 
@@ -175,6 +186,7 @@ class Player extends Phaser.GameObjects.Sprite {
         lives-=D;
         this.myScene.events.emit('playerTookDamage');
         if(lives<=0){
+            lives=0;
             //this.die();
         }
     }

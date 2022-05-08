@@ -2,7 +2,7 @@ class RandomNamePlugin extends Phaser.Plugins.BasePlugin {
     // Global plugin
     constructor (pluginManager)
     {
-        super('RandomNamePlugin', pluginManager);
+        super(pluginManager);
 
         this.syllables1 = [ 'fro', 'tir', 'nag', 'bli', 'mon', 'zip' ];
         this.syllables2 = [ 'fay', 'shi', 'zag', 'blarg', 'rash', 'izen' ];
@@ -21,9 +21,9 @@ class RandomNamePlugin extends Phaser.Plugins.BasePlugin {
         //  Here are the game-level events you can listen to.
         //  At the very least you should offer a destroy handler for when the game closes down.
 
-        // var eventEmitter = this.game.events;
+         var eventEmitter = this.game.events;
 
-        // eventEmitter.once('destroy', this.gameDestroy, this);
+         eventEmitter.once('destroy', this.gameDestroy, this);
         // eventEmitter.on('pause', this.gamePause, this);
         // eventEmitter.on('resume', this.gameResume, this);
         // eventEmitter.on('resize', this.gameResize, this);
@@ -32,12 +32,17 @@ class RandomNamePlugin extends Phaser.Plugins.BasePlugin {
         // eventEmitter.on('poststep', this.gamePostStep, this);
         // eventEmitter.on('prerender', this.gamePreRender, this);
         // eventEmitter.on('postrender', this.gamePostRender, this);
-        console.log("RANDOM NAME START");
+//        console.log("RANDOM NAME START");
+    }
+
+    gameDestroy()
+    {
+
     }
 
     stop()
     {
-            console.log("RANDOM NAME STOP");
+//            console.log("RANDOM NAME STOP");
 
     }
 
