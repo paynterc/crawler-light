@@ -68,6 +68,7 @@ class Rogue extends Player {
             let config = {faction:0,img:'invis32',initSpeed:50,lifeSpan:5,damage:2,destroyOnHitWall:false}
             this.fireBullet(A,config);
             //let bullet = new Bullet(this.myScene,this.x + (xOff*dir),this.y+16,A,config);
+            this.myScene.swordSound.play();
     }
 
     attack3(){
@@ -81,6 +82,7 @@ class Rogue extends Player {
             this.fireBullet(A,config);
 
             //let bullet = new Bullet(this.myScene,this.x + (xOff*dir),this.y,A,config);
+            this.myScene.swordSound.play();
     }
 
     attack4(){
@@ -92,6 +94,7 @@ class Rogue extends Player {
             A *= (Math.PI/180);
             let config = {faction:0,img:'invis64',initSpeed:50,lifeSpan:5,damage:3,destroyOnHitWall:false}
             this.fireBullet(A,config);
+            this.myScene.swordSound.play();
 
             //let bullet = new Bullet(this.myScene,this.x + (xOff*dir),this.y,A,config);
     }

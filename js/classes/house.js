@@ -1,7 +1,7 @@
 class House extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, config = {}) {
 
-        super(scene, x, y, config.hasOwnProperty('img') ? config.img : 'square');
+        super(scene, x, y, config.hasOwnProperty('img') ? config.img : 'hut1');
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
@@ -10,6 +10,7 @@ class House extends Phaser.Physics.Arcade.Sprite {
 
         this.invAdd = config.invAdd || null
         this.anm = config.anm || null;
+        this.anmOpen = config.anmOpen || null;
 
 
         this.init();
@@ -22,6 +23,8 @@ class House extends Phaser.Physics.Arcade.Sprite {
         if(this.anm){
             this.play(this.anm);
         }
+        this.depth = this.y;
+
     }
 
 

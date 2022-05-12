@@ -81,8 +81,8 @@ class Portal extends Phaser.Physics.Arcade.Sprite {
         if(!this.open) return false;
         this.open = false;
 
-        lvlId = this.goToLvl;
-
+//        lvlId = this.goToLvl;
+        lvlId = null;
         if(path.length>2){
             path=[];
         }

@@ -63,9 +63,15 @@ class BootScene extends Phaser.Scene{
         this.load.spritesheet('giant', 'img/Giant.png',{ frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('goboFire', 'img/goboFire.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('braceletOfWinds', 'img/braceletofwinds.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('hut1', 'img/villiage/hut1.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('skeleton', 'img/Skeleton.png',{ frameWidth: 64, frameHeight: 64 });
 
         // Audio
-        this.load.audio('theme1', 'audio/music/Mushrooms.mp3');
+        this.load.audio('theme1', 'audio/music/Togetherwearestronger.mp3');
+        this.load.audio('boss1Theme', 'audio/music/TheMomentofTruth.mp3');
+        this.load.audio('hitHurt', 'audio/sfx/Hit_Hurt7.mp3');
+        this.load.audio('hitHurtPlr', 'audio/sfx/Hit_Hurtplr.mp3');
+        this.load.audio('sword', 'audio/sfx/sword.mp3');
 //         this.load.audio('incoming1', 'audio/sfx/incoming1.mp3');
 
 //        this.load.plugin('DialogModalPlugin', 'js/plugin/dialog_plugin.js');
@@ -85,26 +91,38 @@ class BootScene extends Phaser.Scene{
         centerY = this.cameras.main.height / 2;
         defaultVolume = 0.15;
 
-        lives = 10;
-        score = 0;
-        gold = parseInt(localStorage.getItem('gold')) || 0;;
+        this.backpack = this.plugins.get('BackpackPlugin');
+
+
         enemies = 0;
-        lvlId = "forest";
-        soldLamb=false;
-        path=[];//keep track of the portals passed through
-//        maxInventory = 6;
-//        inventory = [];
+        lvlId = null;
+        let saveDataRaw = localStorage.getItem('crawlerData');
+        let saveData = JSON.parse(saveDataRaw) || {};
+        this.backpack.items = saveData.inventory || [];
+        lives = saveData.lives || 10;
+        gold = saveData.gold || 0;
+        soldLamb = saveData.soldLamb || false;
+        path = saveData.path || [];//keep track of the portals passed through
 
+        townsData = [
+               {id:1,name:"Emberbow",grid:undefined,state:0},
+               {id:2,name:"Winterstone",grid:undefined,state:0},
+               {id:3,name:"Nightholme",grid:undefined,state:0},
+           ]
 
-        tips = [
-            {shown:false,txt:"Something has put a curse on the forest and now it keeps changing. There are three villages, but the paths to them have been lost and people can't find their way home. Can you help find the villages?"},
-            {shown:false,txt:"The portals won't open until you defeat all the monsters in this part of the forest."},
-            {shown:false,txt:"There are people in the forest who need help. Some of them may have rewards for you."}
-        ];
+        towns = saveData.towns || townsData;
+
+        tipsData =[
+              {shown:false,txt:"Something has put a curse on the forest and now it keeps changing. There are three villages, but the paths to them have been lost and people can't find their way home. Can you help find the villages?"},
+              {shown:false,txt:"The portals won't open until you defeat all the monsters in this part of the forest."},
+              {shown:false,txt:"The people in the first village always lit two fires before the new moon."}
+          ];
+
+        tips = saveData.tips || tipsData;
 
 
         // BE SURE ALL MISSION ITEMS ARE IN THE ITEMS LIST ABOVE
-        missions = [
+        missionsData = [
             {
                 id:'lostLamb',npc:'shepherd',started:false,complete:false
                 ,itemRequired:"lamb"
@@ -112,6 +130,7 @@ class BootScene extends Phaser.Scene{
                 ,txtStart:"Please help me find my lost lamb. Those monsters chased it away."
                 ,txtActive:"Did you find my lamb?"
                 ,txtComplete:"Thank you for bringing back my lamb! Here, take this magic charm."
+                ,isRandom:true
             },
             {
                 id:'witchMushroom',npc:'witch',started:false,complete:false
@@ -120,6 +139,7 @@ class BootScene extends Phaser.Scene{
                 ,txtStart:"I need one mushroom. If you bring me one I'll give you a potion.."
                 ,txtActive:"I still need that mushroom."
                 ,txtComplete:"Thanks for the mushroom. Here's your potion."
+                ,isRandom:true
              },
               {
                   id:'lostShell',npc:'snalGuy',started:false,complete:false
@@ -128,6 +148,7 @@ class BootScene extends Phaser.Scene{
                   ,txtStart:"Hi, I have lost my other shell. Can you find it? I will give you 100 coins."
                   ,txtActive:"Did you find my shell?"
                   ,txtComplete:"Thanks! Here's your gold."
+                  ,isRandom:true
                },
              {
                  id:'buidFire',npc:'goboFire',npcName:'Gobo',started:false,complete:false
@@ -137,10 +158,19 @@ class BootScene extends Phaser.Scene{
                  ,txtActive:"I still can't light this fire."
                  ,txtComplete:"Finally! Here, take this magic charm."
                  ,anmComplete:'goboFireLit'
+                 ,isRandom:true
+              },
+                {
+                 id:'bossSword',npc:'snalGuy',npcName:'Snal',started:false,complete:false
+                 ,itemRequired:"starEmber"
+                 ,itemGiven:"heartCharm"
+                 ,txtStart:"A horrible enchanted sword has chased everyone from the village. If you defeat it they might come back."
+                 ,txtActive:"Did you defeat the giant sword? It's through that stone portal."
+                 ,txtComplete:"Thank you!"
+                 ,isRandom:false
               }
-
         ];
-
+        missions = saveData.missions || missionsData;
 
 
         mediaService = new MediaService(this);
@@ -507,6 +537,37 @@ class BootScene extends Phaser.Scene{
             frameRate: 12,
             repeat: -1
         };
+
+        animConfigs.skeletonWalk = {
+            key: 'skeletonWalk',
+            frames: this.anims.generateFrameNumbers('skeleton', { start: 1, end: 3, first: 1 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.skeletonTell = {
+            key: 'skeletonTell',
+            frames: this.anims.generateFrameNumbers('skeleton', { start: 0, end: 0, first: 0 }),
+            frameRate: 2,
+            repeat: 0
+        };
+        animConfigs.skeletonAttack = {
+            key: 'skeletonAttack',
+            frames: [
+                {key:'skeleton',frame:4,duration:1},
+                {key:'skeleton',frame:5,duration:300},
+            ],
+            repeat: 0
+        };
+        animConfigs.skeletonDie = {
+            key: 'skeletonDie',
+            frames: [
+                {key:'skeleton',frame:6,duration:1},
+                {key:'skeleton',frame:7,duration:11},
+            ],
+            frameRate: 6,
+            repeat: 0
+        };
+
 
         this.scene.start('MenuScene');
     }

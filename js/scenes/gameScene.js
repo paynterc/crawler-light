@@ -76,13 +76,66 @@ class GameScene extends Phaser.Scene {
         gridCenterY = Math.floor(this.gameGrid[0].length/2);
 
 
-//        lvlId="boss1";
+//        lvlId="town1";
         let plrX=g2Px(gridCenterX);//in pixels
         let plrY=g2Px(gridCenterY);
+
+        this.quipText = this.add.text(plrX,plrY, "", { fontSize: '8px', fontFamily: 'FourBitRegular' }).setDepth(10000000).setAlpha(0);
+
         if(lvlId=="boss1"){
             plrX=g2Px(gridCenterX);//in pixels
             plrY=g2Px(gridCenterY+3)-32;
             this.makeBossRoom1();
+            let bp = new BossPortal(this,plrX,plrY);
+            this.gameGrid[gridCenterX][gridCenterY] = PORTAL4;
+            bp.goToLvl="town1";
+
+        }else if(lvlId=="town1"){
+
+            // towns[0], missionId:'bossSword', e.goToLvl = "boss1";
+            let townData = towns[0];
+            if(townData.grid){
+
+                this.gameGrid = townData.grid;
+                this.buildRoom();
+                if(townData.state===0){
+                    let RC = this.findSpotOnGrid();
+                    new Npc(this,g2Px(RC[0]),g2Px(RC[1]),{ img:'snalGuy',missionId:'bossSword' });
+                    this.placeEnemies();
+                }
+
+                this.portals.children.each((e)=>{
+                    if(e.type=='boss'){
+                        if(townData.state===0){
+                            e.goToLvl = "boss1";
+                        }else{
+                            that.add.image(e.x,e.y,'bossPortal');
+                            e.destroy();
+                        }
+                    }
+                });
+
+
+            }else{
+
+                this.makeMaze();
+                this.gameGrid[gridCenterX][gridCenterY] = OCCUPIED;
+                this.placeHouses();
+                this.placePortal('moon');
+                this.placePortal('gem');
+                this.placePortal('flame');
+                let bp = this.placeBossPortal();
+                bp.goToLvl = "boss1";
+
+                let RC = this.findSpotOnGrid();
+                new Npc(this,g2Px(RC[0]),g2Px(RC[1]),{ img:'snalGuy',missionId:'bossSword' });
+
+                this.placeEnemies();
+
+                townData.grid = this.gameGrid;
+            }
+
+
         }else{
 
             this.makeMaze();
@@ -102,8 +155,13 @@ class GameScene extends Phaser.Scene {
             this.placeMobs();
         }
 
-            this.player = new Player(this,plrX,plrY+16);
-//        this.player = new Rogue(this,plrX,plrY+16);
+//            this.player = new Player(this,plrX,plrY+16);
+        this.player = new Rogue(this,plrX,plrY+16);
+
+
+//        new Npc(this,plrX,plrY-64,{ img:'witch',tip:"HELLO"});
+
+
 
         this.checkEnemies();
         this.cameras.main.startFollow(this.player);
@@ -111,6 +169,7 @@ class GameScene extends Phaser.Scene {
 
         this.physics.add.collider(this.player, this.blocks);
         this.physics.add.collider(this.enemies, this.blocks);
+        this.physics.add.collider(this.npcs, this.blocks);
         this.physics.add.collider(this.catchables, this.blocks);
         this.physics.add.collider(this.mobs, this.blocks);
         this.physics.add.collider(this.bullets, this.blocks, function(bullet,block){ if(bullet.destroyOnHitWall) bullet.destroyIt(); });
@@ -125,6 +184,7 @@ class GameScene extends Phaser.Scene {
 
 
         this.addEvents();
+        this.addSounds();
         this.applyLevelBonuses();
 
 //         touching or interacting
@@ -135,13 +195,54 @@ class GameScene extends Phaser.Scene {
 
     }
 
+    addSounds(){
+        this.hitHurt = this.sound.add('hitHurt',{volume:.25});
+        this.hitHurtPlr = this.sound.add('hitHurtPlr',{volume:.25});
+        this.swordSound = this.sound.add('sword',{volume:.25});
+
+    }
+
     updatePath(){
+        if(lvlId) return false;// we already have a lvlid
         let pathString = path.join();
         if(pathString=="flame,flame,moon"){
-            lvlId="boss1";
+            lvlId="town1";
         }else{
             lvlId="forest";
         }
+    }
+
+    saveGameState(){
+        //tips, missions, gold, inventory, lives, towns, soldLamb, path
+        let myData = {
+            gold:gold,
+            tips:tips,
+            missions:missions,
+            inventory:this.backpack.items,
+            lives:lives,
+            towns:towns,
+            soldLamb:soldLamb,
+            path:path,
+        }
+
+        localStorage.setItem('crawlerData',JSON.stringify(myData));
+
+    }
+
+    newGame(){
+        enemies = 0;
+        lvlId = null;
+        this.backpack.items = [];
+        lives = 10;
+        gold = 0;
+        soldLamb = false;
+        path=[];
+        towns = townsData;
+        tips = tipsData;
+        missions = missionsData;
+
+        console.log('new tips',tips);
+        this.restart=true;
     }
 
 
@@ -150,6 +251,7 @@ class GameScene extends Phaser.Scene {
         this.events.once('shutdown', this.shutDownListener,this);
         this.events.on('enemiesUpdated', this.checkEnemies, this);
         this.events.on('enemyDied', this.enemyDied, this);
+        this.events.on('bossDied', this.bossDied, this);
 //        gameEvents.on('test', this.testEvent, this);
 
     }
@@ -157,7 +259,9 @@ class GameScene extends Phaser.Scene {
     shutDownListener(){
         this.events.off('enemiesUpdated', this.checkEnemies);
         this.events.off('enemyDied', this.enemyDied);
+        this.events.off('bossDied', this.bossDied);
         localStorage.setItem('gold',gold);
+        this.saveGameState();
 //        gameEvents.off('test', this.testEvent);
     }
 
@@ -228,6 +332,19 @@ class GameScene extends Phaser.Scene {
             this.checkEnemies();
     }
 
+    bossDied(bossName){
+        if(bossName=="BOSS SWORD"){
+                let bossMission = missions.filter(function(m) { return  m.id=="bossSword"; });
+                if(bossMission.length>0){
+                    bossMission[0].started=true;
+                    bossMission[0].complete=true;
+                }
+                towns[0].state=1;
+        }
+        console.log('missions',missions);
+        console.log('towns',towns);
+    }
+
     checkEnemies(){
         if(enemies<1){
             this.portals.children.each((e)=>{
@@ -259,7 +376,7 @@ class GameScene extends Phaser.Scene {
     {
         if(!enemy.canHitPlayer){ return false }
         if(enemy.attackCoolTimer<=0){
-            enemy.attackCoolTimer=20;
+            enemy.attackCoolTimer=30;
             this.emitter1.emitParticleAt(enemy.x, enemy.y, 10);
             player.applyDamage(enemy.attackDamage);
         }
@@ -273,7 +390,16 @@ class GameScene extends Phaser.Scene {
 
     hitNpc(player,npc)
     {
-        npc.interact();
+        if(npc.timedInteract){
+            this.overlapping = true;
+            if(this.overlapCount>=350){
+                this.overlapCount=0;
+                npc.interact();
+            }
+        }else{
+            npc.interact();
+        }
+
     }
 
     hitVendor(player,npc)
@@ -281,6 +407,7 @@ class GameScene extends Phaser.Scene {
         if(npc.interacting) return false;
         this.overlapping = true;
         if(this.overlapCount>=350){
+            this.overlapCount=0;
             npc.interact();
         }
     }
@@ -361,7 +488,14 @@ class GameScene extends Phaser.Scene {
         });
 
         this.overlapping=false;
+        if(this.quipText.alpha>0) this.quipText.alpha -= .015;
+    }
 
+    setQuipText(xx,yy,txt){
+        if(this.quipText.alpha>0) return false;
+        this.quipText.x = xx;
+        this.quipText.y = yy;
+        this.quipText.setText(txt).setAlpha(1);
     }
     
     gameOver()
@@ -416,9 +550,11 @@ class GameScene extends Phaser.Scene {
             this.makeRoom(posX,posY,7,7);
             let boss = new BossSword(this,g2Px(posX),g2Px(posY),{img:'bossSword',});
             this.buildRoom();
+            mediaService.setMusic('boss1Theme');
+
     }
 
-    buildRoom(){
+    buildRoom(config={}){
         for (var i=0; i<this.gameGrid.length; i++) {
             let col = this.gameGrid[i];
             for (var j=0; j<col.length; j++) {
@@ -442,10 +578,29 @@ class GameScene extends Phaser.Scene {
                     let img = this.add.image(i*WALLSIZE,j*WALLSIZE,'bushFall').setDepth(10000+(j*WALLSIZE)).setAngle(rA);
 //                    let img = this.add.image(i*WALLSIZE,j*WALLSIZE,'bush').setDepth(10000+(j*WALLSIZE)).setAngle(rA);
 
+                }else if(this.gameGrid[i][j]===HOUSE_1){
+                        new House(this,i*WALLSIZE,j*WALLSIZE);
+                }else if(this.gameGrid[i][j]===PORTAL1){
+                        new Portal(this,i*WALLSIZE,j*WALLSIZE,{type:'moon'});
+                }else if(this.gameGrid[i][j]===PORTAL2){
+                        new Portal(this,i*WALLSIZE,j*WALLSIZE,{type:'gem'});
+                }else if(this.gameGrid[i][j]===PORTAL3){
+                        new Portal(this,i*WALLSIZE,j*WALLSIZE,{type:'flame'});
+                }else if(this.gameGrid[i][j]===PORTAL4){
+                        new BossPortal(this,i*WALLSIZE,j*WALLSIZE);
                 }
-            }
+}
         }
     }
+
+    placeHouses(){
+        for(var i=0;i<8;i++){
+            let RC = this.findSpotOnGrid();
+            new House(this,g2Px(RC[0]),g2Px(RC[1]));
+            this.gameGrid[RC[0]][RC[1]] = HOUSE_1;
+        }
+    }
+
 
      // By 'room' we mean a rectangular area in the maze, not the entire world map.
      makeRoom(r,c,w,h)
@@ -483,7 +638,7 @@ class GameScene extends Phaser.Scene {
                     let odds = 10;
                     if(Phaser.Math.Between(1,odds)===odds && E>0){
 
-                        let odds2=6;
+                        let odds2=7;
                         let roll = Phaser.Math.Between(1,odds2);
                         if(roll===1)
                         {
@@ -496,8 +651,10 @@ class GameScene extends Phaser.Scene {
                              this.makeLaserSlime( g2Px(i),g2Px(j) );
                         }else if(roll === 5){
                             this.minionSwordPack( g2Px(i),g2Px(j) );
-                        }else{
+                        }else if(roll === 6){
                             this.skythBugPack( g2Px(i),g2Px(j) );
+                        }else{
+                            this.makeSkeleton(g2Px(i),g2Px(j));
                         }
 
                         E--;
@@ -510,7 +667,7 @@ class GameScene extends Phaser.Scene {
 
     placeNpc(){
 
-        let incompletMissions  =   missions.filter(function(m) { return m.complete === false; });
+        let incompletMissions  =   missions.filter(function(m) { return m.complete === false && m.isRandom; });
         if (incompletMissions.length < 1)  return false;
         let odds = 2;
         let theMission = null;
@@ -525,8 +682,16 @@ class GameScene extends Phaser.Scene {
         // Don't place the "tips" snal if there is already a snal mission active.
         let snalMissions = missions.filter(function(m) { return m.complete === false && m.started===true && m.npc=="snalGuy"; });
         if( (theMission==null || theMission.npc != 'snalGuy') && snalMissions.length<1){
-                let snalLoc = this.findSpotOnGrid();
-                let snal = new Snal(this,g2Px(snalLoc[0]),g2Px(snalLoc[1]),{img:'snalGuy'});
+                let tipsF =  tips.filter(function(tip) {
+                  return tip.shown === false;
+                });
+                let theTip = tipsF[0];
+                if(theTip){
+                    let snalLoc = this.findSpotOnGrid();
+                    let snal = new Snal(this,g2Px(snalLoc[0]),g2Px(snalLoc[1]),{img:'snalGuy',tip:theTip.txt});
+                    snal.init(theTip);
+                }
+
         }
 
 
@@ -539,7 +704,10 @@ class GameScene extends Phaser.Scene {
         for(var i=0;i<=num;i++){
             let RC = this.findSpotOnGrid(false);
             let rndMob = mobs[Phaser.Math.Between(0,mobs.length-1)];
-            new Mob(this, g2Px(RC[0]), g2Px(RC[1]), {anmDefault:rndMob,defaultAcc:5,maxVelocity:8} );
+            let quip='';
+            if(rndMob==='kitty') quip = 'Purr';
+//            if(rndMob==='niceGhost') quip = 'Boo';
+            new Mob(this, g2Px(RC[0]), g2Px(RC[1]), {anmDefault:rndMob,defaultAcc:5,maxVelocity:8,quip:quip} );
         }
     }
 
@@ -571,6 +739,8 @@ class GameScene extends Phaser.Scene {
         }
 
     }
+
+
 
     findSpotOnGrid(safePlayer=true){
             let rC = Phaser.Math.Between(1,this.gameGrid.length-2);
@@ -608,7 +778,16 @@ class GameScene extends Phaser.Scene {
 
         let RC = this.findSpotOnGrid();
         let P = new Portal(this,g2Px(RC[0]),g2Px(RC[1]),{type:type});
-        this.gameGrid[RC[0]][RC[1]] = OCCUPIED;
+        let gridKey = OCCUPIED;
+        if(type=='moon'){
+            gridKey = PORTAL1;
+        }else if(type=='gem'){
+            gridKey = PORTAL2;
+        }else if(type=='flame'){
+            gridKey = PORTAL3;
+        }
+
+        this.gameGrid[RC[0]][RC[1]] = gridKey;
         return true;
 
 
@@ -628,9 +807,9 @@ class GameScene extends Phaser.Scene {
     placeBossPortal(){
 
         let RC = this.findSpotOnGrid();
-        new BossPortal(this,g2Px(RC[0]),g2Px(RC[1]));
-        this.gameGrid[RC[0]][RC[1]] = OCCUPIED;
-        return true;
+        let bp = new BossPortal(this,g2Px(RC[0]),g2Px(RC[1]));
+        this.gameGrid[RC[0]][RC[1]] = PORTAL4;
+        return bp;
     }
 
     redImpPack(xx,yy){
@@ -728,6 +907,25 @@ class GameScene extends Phaser.Scene {
             attackFrequency:180
         }
         new Enemy(this,xx,yy,mConfig);
+    }
+
+    makeSkeleton(xx,yy){
+            let mConfig = {
+                img:'skeleton',
+                anmDefault:'skeletonWalk',
+                anmTell:'skeletonTell',
+                anmAttack:'skeletonAttack',
+                anmDie: 'skeletonDie',
+                attackDamage:2,
+                attackVelocity:260,
+                agroRange:200,
+                bdyW:24,
+                bdyH:32,
+                hp:10,
+                attackFrequency:180
+            }
+        new Enemy(this,xx,yy,mConfig);
+
     }
 
         makeLaserSlime(xx,yy){

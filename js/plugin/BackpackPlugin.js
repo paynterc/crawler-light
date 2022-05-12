@@ -68,6 +68,7 @@ class BackpackPlugin extends Phaser.Plugins.BasePlugin {
         this.itemTxt2 = this.drawScene.make.text({x: this._getGameWidth()/2,y: this._getGameHeight() - this.yPos - 24,text:"",style:{font:"12px FourBitRegular"}}).setDepth(100000).setOrigin(.5,1);
         //this._hideText();
         this._createSlots();
+        this._drawInventory();
     }
     setItemLib(itemLib){
         this.itemLib = itemLib;
@@ -216,5 +217,7 @@ class BackpackPlugin extends Phaser.Plugins.BasePlugin {
             e.visible=true;
         });
     }
-
+    refresh(){
+        this._drawInventory();
+    }
 }

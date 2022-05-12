@@ -185,6 +185,8 @@ class Player extends Phaser.GameObjects.Sprite {
         if(!D) return false
         lives-=D;
         this.myScene.events.emit('playerTookDamage');
+        this.myScene.hitHurtPlr.play();
+
         if(lives<=0){
             lives=0;
             //this.die();

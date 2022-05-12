@@ -1,4 +1,5 @@
-var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, gold, lives, enemies, gridCenterX, gridCenterY, missions, gameEvents, tips, lvlId, mediaService, soldLamb, path;
+var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, gold, lives, enemies, gridCenterX, gridCenterY, missions, gameEvents, tips, lvlId, mediaService, soldLamb, path
+,towns, townsData, tipsData, missionsData;
 const W = 480;
 const H = 288;
 const PW = W*4;//physics world width
@@ -14,6 +15,11 @@ const WALLSIZE = UNITSIZE*2;
 const WALL = 1;
 const FLOOR = 0;
 const OCCUPIED = 2;
+const HOUSE_1 = 3;
+const PORTAL1 = 4;
+const PORTAL2 = 5;
+const PORTAL3 = 6;
+const PORTAL4 = 7;
 
 // Enemy states
 const STATE_EN_IDLE = 0;

@@ -19,8 +19,8 @@ class Vendor extends Phaser.Physics.Arcade.Sprite {
     }
 
     interact(){
-        if(this.interacting) return false;
-        this.interacting = true;
+//        if(this.interacting) return false;
+//        this.interacting = true;
 
         this.myScene.showStore();
     }

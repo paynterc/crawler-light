@@ -243,6 +243,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
             this.play(this.anmAttack);
         }
         this.fireAttack();
+        this.flipX = this.body.velocity.x < 0;
 
 //        if( this.anims.currentFrame && this.anims.currentFrame.index === this.anims.getTotalFrames() -1 ){
 //            this.firedAttack=false
@@ -294,7 +295,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         if(this.hp<=0){
             this.die();
         }
-
+        this.myScene.hitHurt.play();
     }
 
     applyKb(angle,speed){

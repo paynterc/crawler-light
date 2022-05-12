@@ -1,29 +1,22 @@
-class Snal extends Mob {
+class Snal extends Npc {
 
-    init(){
+    init(tipObj){
         // A harmless creature
         this.anmDefault = 'snalGuyWalk';
+        this.anmIdle = 'snalGuyWalk';
         this.anmWalk = 'snalGuyWalk';
         this.defaultAcc = 5;
         this.maxVelocity = 5;
-        this.myScene.npcs.add(this);
+        this.doesMove = true;
+        this.tipObj=tipObj;
     }
 
 
     interact(){
 
-        if(this.interacting) return false;
-        this.interacting = true;
-        // if not has mission
-
-        let tipsF =  tips.filter(function(tip) {
-          return tip.shown === false;
-        });
-        let theTip = tipsF[0];
-
-        if(theTip){
-            this.myScene.showText(theTip.txt);
-            theTip.shown=true;
+        if(this.tip){
+            this.tipObj.shown = true;
+            this.myScene.showText(this.tip);
         }
 
     }

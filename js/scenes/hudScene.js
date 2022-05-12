@@ -25,7 +25,7 @@ class HudScene extends Phaser.Scene{
         this.gameScene = this.scene.get('GameScene');
         this.backpack = this.plugins.get('BackpackPlugin');
         this.backpack.startDrawing(this);
-        this.backpack.addItemById("braceletOfWinds");
+//        this.backpack.addItemById("braceletOfWinds");
 
         this.store = this.plugins.get('StorePlugin');
         this.store.startDrawing(this);
@@ -43,11 +43,11 @@ class HudScene extends Phaser.Scene{
         this.gameOverText.setOrigin(0.5);
         this.gameOverText.setVisible(false);
 
-        this.restartText = this.add.text(centerX, centerY+64, "PLAY AGAIN", { fontSize: '32px', fontFamily: 'FourBitRegular' });
+        this.restartText = this.add.text(W-32, H-32, "RESTART", { fontSize: '8px', fontFamily: 'FourBitRegular' });
         this.restartText.setOrigin(0.5);
-        this.restartText.setVisible(false);
         this.restartText.setInteractive().on('pointerdown', function(pointer, localX, localY, event){
-            that.gameScene.gameRestart();
+            that.gameScene.newGame();
+            that.refreshAll();
         }).on('pointerover',function(){
             this.setTint('0x00ff00');
         }).on('pointerout',function(){
@@ -100,6 +100,7 @@ class HudScene extends Phaser.Scene{
             this.gameScene.events.on('caughtCatchable', this.caughtCatchable, this);
             this.gameScene.events.on('storeOpen', this.setStoreUi, this);
             this.gameScene.events.on('bossArrives', this.showHealthbar, this);
+            this.gameScene.events.on('bossDied', this.hideHealthbar, this);
             this.gameScene.events.on('bossHealthUpdate', this.updateHealthbar, this);
             this.gameScene.events.on('newLevel', this.drawPath, this);
 
@@ -122,6 +123,7 @@ class HudScene extends Phaser.Scene{
             this.gameScene.events.off('caughtCatchable', this.caughtCatchable);
             this.gameScene.events.off('storeOpen', this.setStoreUi);
             this.gameScene.events.off('bossArrives', this.showHealthbar);
+            this.gameScene.events.off('bossDied', this.hideHealthbar);
             this.gameScene.events.off('bossHealthUpdate', this.updateHealthbar);
             this.gameScene.events.off('newLevel', this.drawPath);
 
@@ -270,5 +272,12 @@ class HudScene extends Phaser.Scene{
         this.backpack.addItemById(catchable.invAdd);
         this.gameScene.emitter1.emitParticleAt(catchable.x, catchable.y, 10);
         catchable.destroy();
+    }
+
+    refreshAll()
+    {
+        this.drawLives();
+        this.drawPath();
+        this.backpack.refresh();
     }
 }

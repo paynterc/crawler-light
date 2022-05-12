@@ -24,12 +24,15 @@ class BossSword extends Boss {
         //this.body.setSize(16,54);
         //this.body.setOffset(20,8);
         this.A = 0;//bullet angle
-        console.log("BOSS SWORD");
     }
 
     mySetScale(){
 
         this.setScale(2);
+    }
+
+    onDestroy(){
+        this.myScene.events.emit('bossDied',"BOSS SWORD");
     }
 
     attack(time,delta){
