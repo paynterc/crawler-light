@@ -12,7 +12,7 @@ class BootScene extends Phaser.Scene{
         this.load.image('square', 'img/ui/whiteSquare32x.png');
         this.load.image('audio', 'img/ui/Audio34x.png');
         this.load.image('equalizer', 'img/ui/Equalizer34x.png');
-        this.load.image('heart', 'img/heart.png');
+        this.load.image('heart', 'img/Heart.png');
         this.load.image('grassBg', 'img/grass.png');
         this.load.image('hedge', 'img/hedge64.png');
         this.load.image('forestPortalUsed', 'img/PortalUsed.png');
@@ -724,7 +724,6 @@ class BootScene extends Phaser.Scene{
             repeat: 0
         };
 
-        this.backpack.addItemById('potionV');
         this.scene.start('MenuScene');
     }
 
