@@ -1,5 +1,5 @@
 var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, gold, lives, enemies, gridCenterX, gridCenterY, missions, gameEvents, tips, lvlId, mediaService, soldLamb, path
-,towns, townsData, tipsData, missionsData;
+,towns, townsData, tipsData, missionsData, maxLives;
 const W = 480;
 const H = 288;
 const PW = W*4;//physics world width
@@ -80,6 +80,7 @@ const items = [
 {id:'mushroom',img:'mushroom',name:"mushroom",price:5},
 {id:'snailshell',img:'snailShell',name:"snail shell",price:5},
 {id:'starEmber',img:'fireball',name:"Fire Wisp",price:15},
+{id:'potionV',img:'potionV',name:"Potion of Vigor",price:50,description:"Increases maximum health by one.",anm:"potionVanm"},
 ];
 
 

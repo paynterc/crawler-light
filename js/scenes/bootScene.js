@@ -42,7 +42,7 @@ class BootScene extends Phaser.Scene{
         this.load.spritesheet('emyDie', 'img/emyDie.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('redImp', 'img/redImp.png',{ frameWidth: 16, frameHeight: 32 });
         this.load.spritesheet('bulletIce', 'img/bulletIce.png',{ frameWidth: 16, frameHeight: 16 });
-        this.load.spritesheet('forestPortal', 'img/forestPortal.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('forestPortal', 'img/ForestPortal.png',{ frameWidth: 64, frameHeight: 64 });
 
         this.load.spritesheet('lamb', 'img/lamb.png',{ frameWidth: 24, frameHeight: 24 });
         this.load.spritesheet('spookyGhost', 'img/ozzySpookyGhost.png',{ frameWidth: 32, frameHeight: 32 });
@@ -63,8 +63,16 @@ class BootScene extends Phaser.Scene{
         this.load.spritesheet('giant', 'img/Giant.png',{ frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('goboFire', 'img/goboFire.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('braceletOfWinds', 'img/braceletofwinds.png',{ frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('hut1', 'img/villiage/hut1.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('hut1', 'img/village/hut1.png',{ frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('skeleton', 'img/Skeleton.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('wormb', 'img/wormb.png',{ frameWidth: 12, frameHeight: 12 });
+        this.load.spritesheet('gobovillager', 'img/village/gobovillager.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('evilTree', 'img/evilTree.png',{ frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('chompPlant', 'img/chompPlant.png',{ frameWidth: 18, frameHeight: 20 });
+        this.load.spritesheet('fireGiant', 'img/FireGiant2.png',{ frameWidth: 192, frameHeight: 192 });
+        this.load.spritesheet('flamingRock', 'img/flameingrock.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('villagerSword', 'img/villagerSword.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('potionV', 'img/potion.png',{ frameWidth: 32, frameHeight: 32 });
 
         // Audio
         this.load.audio('theme1', 'audio/music/Togetherwearestronger.mp3');
@@ -105,9 +113,9 @@ class BootScene extends Phaser.Scene{
         path = saveData.path || [];//keep track of the portals passed through
 
         townsData = [
-               {id:1,name:"Emberbow",grid:undefined,state:0},
-               {id:2,name:"Winterstone",grid:undefined,state:0},
-               {id:3,name:"Nightholme",grid:undefined,state:0},
+               {id:1,name:"Emberbow",grid:undefined,state:0,bossLvl:"boss1",missionId:"bossGiant"},
+               {id:2,name:"Winterstone",grid:undefined,state:0,bossLvl:"boss2",missionId:"bossSword"},
+               {id:3,name:"Nightholme",grid:undefined,state:0,bossLvl:"boss3",missionId:"bossTree"},
            ]
 
         towns = saveData.towns || townsData;
@@ -135,7 +143,7 @@ class BootScene extends Phaser.Scene{
             {
                 id:'witchMushroom',npc:'witch',started:false,complete:false
                 ,itemRequired:"mushroom"
-                ,itemGiven:"heartCharm"
+                ,itemGiven:"potionV"
                 ,txtStart:"I need one mushroom. If you bring me one I'll give you a potion.."
                 ,txtActive:"I still need that mushroom."
                 ,txtComplete:"Thanks for the mushroom. Here's your potion."
@@ -161,22 +169,170 @@ class BootScene extends Phaser.Scene{
                  ,isRandom:true
               },
                 {
-                 id:'bossSword',npc:'snalGuy',npcName:'Snal',started:false,complete:false
+                 id:'bossSword',npc:'villagerSword',npcName:'Sword Villager',started:false,complete:false
                  ,itemRequired:"starEmber"
                  ,itemGiven:"heartCharm"
                  ,txtStart:"A horrible enchanted sword has chased everyone from the village. If you defeat it they might come back."
                  ,txtActive:"Did you defeat the giant sword? It's through that stone portal."
                  ,txtComplete:"Thank you!"
                  ,isRandom:false
-              }
+              },
+               {
+                id:'bossGiant',npc:'gobovillager',npcName:'Gobo Villager',started:false,complete:false
+                ,itemRequired:"starEmber"
+                ,itemGiven:"heartCharm"
+                ,txtStart:"A fire giant has chased everyone away. Maybe you can defeat him. He's through the stone portal."
+                ,txtActive:"Did you defeat the giant? It's through that stone portal."
+                ,txtComplete:"Thank you!"
+                ,isRandom:false
+             },
+             {
+              id:'bossTree',npc:'snalGuy',npcName:'Snal',started:false,complete:false
+              ,itemRequired:"starEmber"
+              ,itemGiven:"heartCharm"
+              ,txtStart:"An evil tree has chased everyone away. Maybe you can defeat him. He's through the stone portal."
+              ,txtActive:"Did you defeat the evil tree? It's through that stone portal."
+              ,txtComplete:"Thank you!"
+              ,isRandom:false
+           }
         ];
         missions = saveData.missions || missionsData;
-
 
         mediaService = new MediaService(this);
         mediaService.setMusic('theme1');
 
         animConfigs = {};
+        animConfigs.potionVanm = {
+            key: 'potionVanm',
+            frames: this.anims.generateFrameNumbers('potionV', { start: 0, end: 2, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.villagerSword = {
+            key: 'villagerSword',
+            frames: this.anims.generateFrameNumbers('villagerSword', { start: 0, end: 3, first: 0 }),
+            frameRate: 8,
+            repeat: -1
+        };
+        animConfigs.flamingRock = {
+            key: 'flamingRock',
+            frames: this.anims.generateFrameNumbers('flamingRock', { start: 0, end: 2, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.fireGiantWalk = {
+            key: 'fireGiantWalk',
+            frames: this.anims.generateFrameNumbers('fireGiant', { start: 0, end: 18, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.fireGiantTell = {
+            key: 'fireGiantTell',
+            frames: this.anims.generateFrameNumbers('fireGiant', { start: 0, end: 0, first: 0 }),
+            frameRate: 8,
+            repeat: 5
+        };
+        animConfigs.fireGiantAttack1 = {
+            key: 'fireGiantAttack1',
+            frames: this.anims.generateFrameNumbers('fireGiant', { start: 0, end: 18, first: 0 }),
+            frameRate: 36,
+            repeat: 3
+        };
+        animConfigs.fireGiantAttack2 = {
+            key: 'fireGiantAttack2',
+            frames: this.anims.generateFrameNumbers('fireGiant', { start: 19, end: 22, first: 19 }),
+            frameRate: 12,
+            repeat: 9
+        };
+        animConfigs.fireGiantDie = {
+            key: 'fireGiantDie',
+            frames: this.anims.generateFrameNumbers('fireGiant', { start: 0, end: 0, first: 0 }),
+            frameRate: 1,
+            repeat: 1
+        };
+
+
+        animConfigs.chompPlantIdle = {
+            key: 'chompPlantIdle',
+            frames: this.anims.generateFrameNumbers('chompPlant', { start: 0, end: 0, first: 0 }),
+            frameRate: 1,
+            repeat: -1
+        };
+        animConfigs.chompPlantTell = {
+            key: 'chompPlantTell',
+            frames: [
+                {key:'chompPlant',frame:0,duration:300},
+            ],
+            repeat: 0
+        };
+        animConfigs.chompPlantAttack = {
+            key: 'chompPlantAttack',
+            frames: this.anims.generateFrameNumbers('chompPlant', { start: 1, end: 2, first: 1 }),
+            frameRate: 28,
+            repeat: 20
+        };
+        animConfigs.chompPlantDie = {
+            key: 'chompPlantDie',
+            frames: this.anims.generateFrameNumbers('chompPlant', { start: 0, end: 0, first: 0 }),
+            frameRate: 1,
+            repeat: 1
+        };
+
+        animConfigs.evilTreeIdle = {
+            key: 'evilTreeIdle',
+            frames: this.anims.generateFrameNumbers('evilTree', { start: 0, end: 0, first: 0 }),
+            frameRate: 0,
+            repeat: 0
+        };
+
+        animConfigs.evilTreeWalk = {
+            key: 'evilTreeWalk',
+            frames: this.anims.generateFrameNumbers('evilTree', { start: 1, end: 2, first: 1 }),
+            frameRate: 4,
+            repeat: -1
+        };
+        animConfigs.evilTreeTell = {
+            key: 'evilTreeTell',
+            frames: [
+                {key:'evilTree',frame:2,duration:200},
+            ],
+            repeat: 0
+        };
+        animConfigs.evilTreeAttack = {
+            key: 'evilTreeAttack',
+            frames: [
+                {key:'evilTree',frame:3,duration:500},
+                {key:'evilTree',frame:4,duration:2},
+            ],
+            repeat: 0
+        };
+        animConfigs.evilTreeDie = {
+            key: 'evilTreeDie',
+            frames: this.anims.generateFrameNumbers('evilTree', { start: 5, end: 12, first: 5 }),
+            frameRate: 12,
+            repeat: 0
+        };
+
+        animConfigs.goboVillagerIdle = {
+            key: 'goboVillagerIdle',
+            frames: this.anims.generateFrameNumbers('gobovillager', { start: 0, end: 0, first: 0 }),
+            frameRate: 0,
+            repeat: 0
+        };
+        animConfigs.goboVillagerWalk = {
+            key: 'goboVillagerWalk',
+            frames: this.anims.generateFrameNumbers('gobovillager', { start: 1, end: 2, first: 0 }),
+            frameRate: 3,
+            repeat: -1
+        };
+
+        animConfigs.wormbCrawl = {
+            key: 'wormbCrawl',
+            frames: this.anims.generateFrameNumbers('wormb', { start: 0, end: 1, first: 0 }),
+            frameRate: 3,
+            repeat: -1
+        };
+
         animConfigs.goboFireOut = {
             key: 'goboFireLit',
             frames: this.anims.generateFrameNumbers('goboFire', { start: 0, end: 1, first: 0 }),
@@ -568,7 +724,7 @@ class BootScene extends Phaser.Scene{
             repeat: 0
         };
 
-
+        this.backpack.addItemById('potionV');
         this.scene.start('MenuScene');
     }
 

@@ -68,7 +68,6 @@ class HudScene extends Phaser.Scene{
         this.healthBar = this.add.image(healthX, healthY,'square').setDepth(100001).setScale(6, .35).setOrigin(0,0).setTint('0xff0000');
 //        this.healthHeart = this.add.image(healthX -15, healthY-6,'heart').setDepth(100002).setScale(.75).setAngle(90);
         this.bossText = this.add.text(W/2, 8, "Boss", { fontSize: '16px', fontFamily: 'FourBitRegular' }).setDepth(100010).setOrigin(.5);
-
         this.hideHealthbar();
 //        this.showHealthbar();
 
@@ -127,9 +126,13 @@ class HudScene extends Phaser.Scene{
             this.gameScene.events.off('bossHealthUpdate', this.updateHealthbar);
             this.gameScene.events.off('newLevel', this.drawPath);
 
+
     }
 
     hideHealthbar(){
+        if(!this.healthBack){
+            return false;
+        }
         this.healthBack.visible=false;
         this.healthBar.visible=false;
         this.bossText.visible=false;
@@ -237,6 +240,12 @@ class HudScene extends Phaser.Scene{
     drawLives(){
         this.lifeImages.clear(true,true);
         let xx = W-32;
+        for(let i=0;i<maxLives;i++){
+            let img = this.add.image(xx,(UNITSIZE/2),'heart').setScale(.5).setTint('0x000000');
+            this.lifeImages.add(img);
+            xx -= 8;
+        }
+        xx = W-32;
         for(let i=0;i<lives;i++){
             let img = this.add.image(xx,(UNITSIZE/2),'heart').setScale(.5);
             this.lifeImages.add(img);

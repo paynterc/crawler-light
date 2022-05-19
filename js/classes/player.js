@@ -26,6 +26,7 @@ class Player extends Phaser.GameObjects.Sprite {
         this.faction = 0;
         this.myAttackFrequency = 25;
         this.maxVelocity = MAX_SPEED;
+        this.maxLives = 5;
 
         this.init();
         this.updateConfig();
@@ -42,6 +43,7 @@ class Player extends Phaser.GameObjects.Sprite {
 
     updateConfig(){
         this.myAttackTimer = 0;
+        this.lives = this.maxLives;
         this.body.maxVelocity.setTo(this.maxVelocity); // x, y
         this.body.drag.setTo(DRAG,DRAG);
 	    this.body.setSize(this.bdyW,this.bdyH);

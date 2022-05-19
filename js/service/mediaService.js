@@ -9,6 +9,10 @@ class MediaService {
     }
 
     setMusic(musicKey){
+        if(this.music && this.music.key == musicKey){
+            console.log(musicKey+' music is already playing');
+            return false;
+        }
         if(this.music){
             this.music.stop();
         }

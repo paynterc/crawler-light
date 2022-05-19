@@ -17,6 +17,9 @@ class Rogue extends Player {
         this.bdyX = 100;
 		this.bdyY = 35;
 		this.xOff = 32;
+
+        this.maxLives = 6;
+
     }
 
 

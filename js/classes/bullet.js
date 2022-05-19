@@ -7,7 +7,7 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         this.myScene = scene;
-
+        this.myAngle = angle;
 
         if(config.hasOwnProperty('anm')){
             this.play(config.anm);
@@ -31,6 +31,7 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
         this.orgX = config.orgX || 0;
         this.orgY = config.orgY || 0;
         this.kb = config.kb || 0;
+        this.doSetRotation = config.hasOwnProperty('doSetRotation') ? config.doSetRotation : true;
 
 
         this.myGroup = config.hasOwnProperty('myGroup') ? config.myGroup : scene.bullets;
@@ -39,7 +40,6 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
         this.body.setAllowGravity(this.allowGrav);
 
 
-        this.rotation = angle;// angle is in radians
         // this.rotation = angle * (Math.PI/180); // convert degrees to radians if needed
 
         const vec = new Phaser.Math.Vector2();
@@ -64,6 +64,9 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
 
     updateConfig(){
         //this.setOrigin(this.orgX,this.orgY);
+        if(this.doSetRotation){
+            this.rotation = this.myAngle;// angle is in radians
+        }
         this.myGroup.add(this);
 
     }

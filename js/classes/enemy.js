@@ -139,7 +139,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     myPreUpdate(time,delta){}
     idle(time,delta){}
-    walk(time,delta){}
     hit(time,delta){}
 
     die(time,delta){
