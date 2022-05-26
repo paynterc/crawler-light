@@ -33,6 +33,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.attackDamage = config.hasOwnProperty('attackDamage') ? config.attackDamage : 1;
         this.myBumpFrequency = config.hasOwnProperty('bumpFrequency') ? config.bumpFrequency : 3;
         this.myAttackFrequency = config.hasOwnProperty('attackFrequency') ? config.attackFrequency : 200;
+        this.checkPlayerFrequency = config.hasOwnProperty('checkPlayerFrequency') ? config.checkPlayerFrequency : 30;
         this.agroRange = config.hasOwnProperty('agroRange') ? config.agroRange : UNITSIZE*4;
         this.coins = config.hasOwnProperty('coins') ? config.coins : 1;
         this.anmDefault = config.hasOwnProperty('anmDefault') ? config.anmDefault : 'emyIdle';
@@ -85,6 +86,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
         this.myBumpTimer = this.myBumpFrequency;
         this.myAttackTimer = this.myAttackFrequency;
+        this.checkPlayerTimer = this.checkPlayerFrequency;
         this.attackCoolTimer = 0;// track time between hits. shouldn't hit more than once every 10 frames or so
         this.body.maxVelocity.setTo(this.maxVelocity); // x, y
         if(!this.anims.currentAnim){
@@ -185,19 +187,24 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.myAttackTimer --;
 
 
-
-        let D = Phaser.Math.Distance.Between(this.x,this.y,this.myScene.player.x,this.myScene.player.y);
-        if(D<=this.agroRange){
-            if(this.myAttackTimer<1){
-                this.myAttackTimer = this.myAttackFrequency;
-                this.setAttackDirection();
-                this.tell();
-                return false;
+        this.checkPlayerTimer--;
+        if(this.checkPlayerTimer<1){
+            this.checkPlayerTimer=this.checkPlayerFrequency;
+            let D = Phaser.Math.Distance.Between(this.x,this.y,this.myScene.player.x,this.myScene.player.y);
+            if(D<=this.agroRange){
+                if(this.myAttackTimer<1){
+                    this.myAttackTimer = this.myAttackFrequency;
+                    this.setAttackDirection();
+                    this.tell();
+                    return false;
+                }
             }
         }
 
-        if(this.anmWalk && this.anims.currentAnim && this.anims.currentAnim.key != this.anmWalk){
-            this.play(this.anmWalk);
+
+
+        if(this.anmWalk){
+            this.play(this.anmWalk,true);
         }
 
         if(this.myBumpTimer<1){
@@ -217,9 +224,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         }
 
         this.flipX = this.body.velocity.x < 0;
-//        if(this.body.velocity.x === 0 && this.body.velocity.y === 0){
-//            this.myState = STATE_EN_IDLE;
-//        }
+
 
     }
 

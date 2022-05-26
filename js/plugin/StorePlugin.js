@@ -128,7 +128,7 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
         // make a clone so we aren't referencing the original array.
         //clonedArray = nodesArray.map(a => {return {...a}})
         this.playerItems=items.map(a => {return {...a}});
-        this.maxPlayerItems=this.playerItems.length;
+        this.maxPlayerItems=6;
     }
     addItemToStore(item){
         //let item = {id:'lamb',img:'lambFace',name:"lamb"}
@@ -154,7 +154,9 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
     	}
     	return false;
     }
+
     buyItemById(itemId){
+
         if(this.playerItems.length>=this.maxPlayerItems){
             //TODO: fail sound
             return false;
@@ -162,6 +164,10 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
         var idx = this.storeItems.findIndex(p => p.id==itemId);
     	if(idx>=0){
     	    var item = this.storeItems[idx];
+            if(this.playerGold<item.price){
+                //TODO: fail sound
+                return false;
+            }
     	    this.addItemToPlayer(item);
     		this.storeItems.splice(idx,1);
     		this.playerGold -= item.price;
@@ -275,7 +281,6 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
     }
 
     _drawCloseButton(){
-        console.log("DRAW CLOSE");
         var self = this;
         this.closeBtn = this.drawScene.make.text({
             x: this._getGameWidth()/2 - 128,

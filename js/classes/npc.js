@@ -133,10 +133,19 @@ class Npc extends Phaser.GameObjects.Sprite {
                 let item = this.myScene.findInventoryItem(this.mission.itemRequired);
                 if(item){
                     this.myScene.removeInventoryItem(this.mission.itemRequired);
-                    this.myScene.addInventoryItem(this.mission.itemGiven);
+                    if(this.mission.itemGiven){
+                        this.myScene.addInventoryItem(this.mission.itemGiven);
+                    }
+                    if(this.mission.goldGiven){
+                        gold += this.mission.goldGiven;
+                    }
+
                     this.mission.complete=true;
                     if(this.anmComplete){this.play(this.anmComplete)}
                     this.myScene.showText(this.mission.txtComplete);
+
+                    this.myScene.events.emit('scoreUpdated',this);
+
 
                 }else{
                     if(this.mission.id=='lostLamb' && soldLamb){

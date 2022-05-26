@@ -27,6 +27,7 @@ class Player extends Phaser.GameObjects.Sprite {
         this.myAttackFrequency = 25;
         this.maxVelocity = MAX_SPEED;
         this.maxLives = 5;
+        this.bonusDamage = 0;
 
         this.init();
         this.updateConfig();
@@ -157,7 +158,7 @@ class Player extends Phaser.GameObjects.Sprite {
     attack1(){
         if(this.myAttackTimer>0) return false;
         this.myAttackTimer = this.myAttackFrequency;
-        let config = {faction:0,img:'bulletIce',anm:'bulletIce',initSpeed:500}
+        let config = {faction:0,img:'bulletIce',anm:'bulletIce',initSpeed:500,damage:1 + this.bonusDamage}
         let pointer = this.myScene.input.activePointer;
         let A = Phaser.Math.Angle.Between(this.x,this.y,pointer.worldX,pointer.worldY);
         this.fireBullet(A,config);

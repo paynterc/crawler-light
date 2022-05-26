@@ -22,7 +22,6 @@ class GameScene extends Phaser.Scene {
         leftKey = this.input.keyboard.addKey('a');  // Get key object
         rightKey = this.input.keyboard.addKey('d');  // Get key object
 
-//        this.bootScene = this.scene.get('BootScene');
         this.hudScene = this.scene.get('HudScene');
 
     }
@@ -31,19 +30,21 @@ class GameScene extends Phaser.Scene {
     {
         let that = this;
         this.cameras.main.setBackgroundColor(0x000000);
+
         this.addAnimations();
         this.backpack = this.plugins.get('BackpackPlugin');
         this.backpack.thing = "bar";
         this.store = this.plugins.get('StorePlugin');
+
         this.namePlugin = this.plugins.get('RandomNamePlugin');
         let name = this.namePlugin.getName();
         mediaService.setMusic('theme1');
         this.hudScene.hideHealthbar();
 
+
         this.restart=false;
 
         this.updatePath();// check the current path, see if we get a special level
-
 
         this.blocks = this.add.group();
         this.enemies = this.add.group();
@@ -77,9 +78,10 @@ class GameScene extends Phaser.Scene {
         gridCenterY = Math.floor(this.gameGrid[0].length/2);
 
 
-        //lvlId="boss2";
+//        lvlId="boss2";
         let plrX=g2Px(gridCenterX);//in pixels
         let plrY=g2Px(gridCenterY);
+
 
         this.quipText = this.add.text(plrX,plrY, "", { fontSize: '8px', fontFamily: 'FourBitRegular' }).setDepth(10000000).setAlpha(0);
 
@@ -132,7 +134,7 @@ class GameScene extends Phaser.Scene {
         this.player = new Rogue(this,plrX,plrY+16);
         maxLives = this.player.maxLives;
 
-
+        this.applyLevelBonuses();
 
         this.checkEnemies();
         this.cameras.main.startFollow(this.player);
@@ -156,7 +158,6 @@ class GameScene extends Phaser.Scene {
 
         this.addEvents();
         this.addSounds();
-        this.applyLevelBonuses();
 
 //         touching or interacting
         this.overlapping = false;
@@ -216,7 +217,8 @@ class GameScene extends Phaser.Scene {
         tips = tipsData;
         missions = missionsData;
 
-        console.log('new tips',tips);
+        this.events.emit('scoreUpdated',this);
+
         this.restart=true;
     }
 
@@ -259,8 +261,25 @@ class GameScene extends Phaser.Scene {
         if(heartCharms){
             lives += heartCharms.length;
             if(lives>maxLives) lives = maxLives;
-            this.events.emit('playerTookDamage');
         }
+
+
+        this.player.bonusDamage = 0;
+        let items = this.backpack.getItems();
+        for(var i=0;i<items.length;i++){
+            let theItem = items[i];
+            this.player.bonusDamage += theItem.bonusDamage || 0;
+        }
+
+
+        for(var i=0;i<items.length;i++){
+            let theItem = items[i];
+            if(theItem.id==='apple' && lives<maxLives){
+                lives ++;
+                this.backpack.removeItemByIndex(i);
+            }
+        }
+
     }
 
     sceneRestart(){
@@ -289,25 +308,26 @@ class GameScene extends Phaser.Scene {
                 }
         }
 
-
     }
 
     enemyDied(enemyKey,xx,yy){
 
             if(enemyKey=='mogus'){
-                new Loot(this,xx,yy,{invAdd:'starEmber',img:'fireball',anm:'fireball'});
-
-
                 let goboMission = missions.filter(function(m) { return m.complete === false && m.started===true && m.id=="buidFire"; });
                 if(goboMission.length>0){
-
                     let odds = 3;
                     if(Phaser.Math.Between(1,odds)===odds){
-                        new Loot(this,xx,yy,{invAdd:'starEmber',img:'fireball',anm:'fireball'});
+                        new Loot(this,xx,yy,{invAdd:'starEmber',img:'fireball',anm:'fireball',pop:true});
                     }
                 }
             }
-
+            let goldOdds=3;
+            if(Phaser.Math.Between(1,goldOdds)===goldOdds){
+                let goldAmt =  Phaser.Math.Between(1,5);
+                for(let g=0;g<goldAmt;g++){
+                    new Loot(this,xx,yy,{img:'coinSpin',anm:'coinSpin',pop:true,gold:1});
+                }
+            }
             this.checkEnemies();
     }
 
@@ -328,8 +348,7 @@ class GameScene extends Phaser.Scene {
             }
             towns[0].state=1;
         }
-        console.log("BOSS DIED",missions);
-        console.log("TOWNS",towns);
+
     }
 
     checkEnemies(){
@@ -463,6 +482,10 @@ class GameScene extends Phaser.Scene {
             this.overlapCount+=3;
             this.graphics.visible=true;
             this.drawTimer();
+            if(this.overlapCount>356){
+                this.overlapCount=0;
+                this.overlapping=false;
+            }
         }else{
             this.overlapCount=0;
             this.graphics.visible=false;
@@ -474,7 +497,7 @@ class GameScene extends Phaser.Scene {
             e.update(time,delta);
         });
 
-        this.overlapping=false;
+//        this.overlapping=false;
         if(this.quipText.alpha>0) this.quipText.alpha -= .015;
     }
 
@@ -815,7 +838,7 @@ class GameScene extends Phaser.Scene {
 
     placeMobs(){
         let num = Phaser.Math.Between(0,2);
-        let mobs = ['niceGhost','kitty','wormbCrawl'];
+        let mobs = ['niceGhost','kitty','wormbCrawl','firefly'];
 
         for(var i=0;i<=num;i++){
             let RC = this.findSpotOnGrid(false);
@@ -823,7 +846,16 @@ class GameScene extends Phaser.Scene {
             let quip='';
             if(rndMob==='kitty') quip = 'Purr';
 //            if(rndMob==='niceGhost') quip = 'Boo';
-            new Mob(this, g2Px(RC[0]), g2Px(RC[1]), {anmDefault:rndMob,defaultAcc:5,maxVelocity:8,quip:quip} );
+            if(rndMob==='firefly'){
+
+                for(var i=0;i<3;i++){
+                        let mob = new Mob(this, g2Px(RC[0]) + Phaser.Math.Between(0,8)-16, g2Px(RC[1]) + Phaser.Math.Between(0,8)-16, {anmDefault:'firefly',defaultAcc:.5,maxVelocity:1} );
+                        mob.play('firefly',false,Phaser.Math.Between(0,7));
+                }
+
+            }else{
+                new Mob(this, g2Px(RC[0]), g2Px(RC[1]), {anmDefault:rndMob,defaultAcc:5,maxVelocity:8,quip:quip} );
+            }
         }
     }
 
@@ -911,6 +943,11 @@ class GameScene extends Phaser.Scene {
 
     placeVendor(){
         let odds = 3;
+                        let RC = this.findSpotOnGrid();
+                        new Vendor(this,g2Px(RC[0]),g2Px(RC[1]));
+                        this.gameGrid[RC[0]][RC[1]] = OCCUPIED;
+                        return true;
+
         if(this.backpack.isFull() || Phaser.Math.Between(0,odds)===odds){
                 let RC = this.findSpotOnGrid();
                 new Vendor(this,g2Px(RC[0]),g2Px(RC[1]));
@@ -1072,8 +1109,7 @@ class GameScene extends Phaser.Scene {
             new ChompPlant(this,xx+xOff,yy-yOff,{img:'chompPlant'});
             new ChompPlant(this,xx-xOff,yy,{img:'chompPlant'});
             new ChompPlant(this,xx+xOff,yy,{img:'chompPlant'});
-            new ChompPlant(this,xx-xOff,yy+yOff,{img:'chompPlant'});
-            new ChompPlant(this,xx+xOff,yy+yOff,{img:'chompPlant'});
+
         }
 
         drawTimer(){

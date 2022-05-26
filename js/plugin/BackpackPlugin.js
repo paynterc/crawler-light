@@ -48,6 +48,7 @@ class BackpackPlugin extends Phaser.Plugins.BasePlugin {
         // eventEmitter.on('prerender', this.gamePreRender, this);
         // eventEmitter.on('postrender', this.gamePostRender, this);
         console.log("BackpackPlugin START");
+
     }
 
     stop()
@@ -111,6 +112,9 @@ class BackpackPlugin extends Phaser.Plugins.BasePlugin {
     	if(item){
     		this.addItem(item);
     	}
+    }
+    getItems(){
+        return this.items;
     }
     // Removes the first matching item
     removeItemById(itemId){

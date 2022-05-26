@@ -101,7 +101,7 @@ class HudScene extends Phaser.Scene{
             this.gameScene.events.on('bossArrives', this.showHealthbar, this);
             this.gameScene.events.on('bossDied', this.hideHealthbar, this);
             this.gameScene.events.on('bossHealthUpdate', this.updateHealthbar, this);
-            this.gameScene.events.on('newLevel', this.drawPath, this);
+            this.gameScene.events.on('newLevel', this.refreshAll, this);
 
 
 
@@ -124,7 +124,7 @@ class HudScene extends Phaser.Scene{
             this.gameScene.events.off('bossArrives', this.showHealthbar);
             this.gameScene.events.off('bossDied', this.hideHealthbar);
             this.gameScene.events.off('bossHealthUpdate', this.updateHealthbar);
-            this.gameScene.events.off('newLevel', this.drawPath);
+            this.gameScene.events.off('newLevel', this.refreshAll);
 
 
     }
@@ -225,11 +225,14 @@ class HudScene extends Phaser.Scene{
     }
 
     updateScore(){
-
+        this.refreshAll();
     }
 
     updateEnemies(){
         this.enemyText.setText("Enemies: "+ enemies.toString());
+    }
+
+    updateGold(){
         this.goldText.setText("Gold: "+ gold.toString());
     }
 
@@ -276,15 +279,21 @@ class HudScene extends Phaser.Scene{
     }
 
     caughtCatchable(catchable){
-        if(!catchable.invAdd) return false;
-        if(this.backpack.isFull()) return false;
-        this.backpack.addItemById(catchable.invAdd);
+        if(catchable.invAdd){
+            if(this.backpack.isFull()) return false;
+            this.backpack.addItemById(catchable.invAdd);
+        }else if(catchable.gold){
+            gold+=catchable.gold;
+            this.updateGold();
+        }
         this.gameScene.emitter1.emitParticleAt(catchable.x, catchable.y, 10);
+
         catchable.destroy();
     }
 
     refreshAll()
     {
+        this.updateGold();
         this.drawLives();
         this.drawPath();
         this.backpack.refresh();

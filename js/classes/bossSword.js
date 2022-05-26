@@ -32,6 +32,7 @@ class BossSword extends Boss {
     }
 
     onDestroy(){
+        new Loot(this.myScene,this.x,this.y,{invAdd:'braceletOfWinds',img:'braceletOfWinds',anm:'braceletOfWinds',pop:true});
         this.myScene.events.emit('bossDied',"BOSS SWORD");
     }
 

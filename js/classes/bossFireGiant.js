@@ -32,6 +32,7 @@ class BossFireGiant extends Boss {
     }
 
     onDestroy(){
+        new Loot(this.myScene,this.x,this.y,{invAdd:'fireBracelet',img:'fireBracelet',pop:true});
         this.myScene.events.emit('bossDied',"FIRE GIANT");
     }
 

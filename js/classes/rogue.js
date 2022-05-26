@@ -68,7 +68,7 @@ class Rogue extends Player {
 
             let A = this.flipX ? 180 : 0;
              A *= (Math.PI/180);// convert to radians
-            let config = {faction:0,img:'invis32',initSpeed:50,lifeSpan:5,damage:2,destroyOnHitWall:false}
+            let config = {faction:0,img:'invis32',initSpeed:50,lifeSpan:5,damage:2 + this.bonusDamage,destroyOnHitWall:false}
             this.fireBullet(A,config);
             //let bullet = new Bullet(this.myScene,this.x + (xOff*dir),this.y+16,A,config);
             this.myScene.swordSound.play();
@@ -81,7 +81,7 @@ class Rogue extends Player {
 //            let A = Phaser.Math.Angle.Between(this.x,this.y,pointer.worldX,pointer.worldY);
             let A = this.flipX ? 180 : 0;
              A *= (Math.PI/180);
-            let config = {faction:0,img:'invis64',initSpeed:50,lifeSpan:10,destroyOnHit:false,damage:2,destroyOnHitWall:false}
+            let config = {faction:0,img:'invis64',initSpeed:50,lifeSpan:10,destroyOnHit:false,damage:2 + this.bonusDamage,destroyOnHitWall:false}
             this.fireBullet(A,config);
 
             //let bullet = new Bullet(this.myScene,this.x + (xOff*dir),this.y,A,config);
@@ -95,7 +95,7 @@ class Rogue extends Player {
 //        let A = Phaser.Math.Angle.Between(this.x,this.y,pointer.worldX,pointer.worldY);
             let A = this.flipX ? 180 : 0;
             A *= (Math.PI/180);
-            let config = {faction:0,img:'invis64',initSpeed:50,lifeSpan:5,damage:3,destroyOnHitWall:false}
+            let config = {faction:0,img:'invis64',initSpeed:50,lifeSpan:5,damage:3 + this.bonusDamage,destroyOnHitWall:false}
             this.fireBullet(A,config);
             this.myScene.swordSound.play();
 

@@ -77,10 +77,12 @@ const items = [
 {id:'lamb',img:'lambFace',name:"lamb",price:5},
 {id:'heartCharm',img:'heartCharm',name:"Heart Charm",price:50,description:"Gives one health on entering a new level."},
 {id:'braceletOfWinds',img:'braceletOfWinds',name:"Bracelet of Winds",price:50,description:"Adds knockback to attacks.",anm:'braceletOfWinds'},
+{id:'fireBracelet',img:'fireBracelet',name:"Bracelet of Fire",price:50,description:"Plus 2 Damage.",bonusDamage:2},
 {id:'mushroom',img:'mushroom',name:"mushroom",price:5},
 {id:'snailshell',img:'snailShell',name:"snail shell",price:5},
 {id:'starEmber',img:'fireball',name:"Fire Wisp",price:15},
 {id:'potionV',img:'potionV',name:"Potion of Vigor",price:50,description:"Increases maximum health by one.",anm:"potionVanm"},
+{id:'apple',img:'apple',name:"Apple",price:10,description:"Grants 1 health at start of new level. Consumed on use."},
 ];
 
 
@@ -111,7 +113,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            fps: 260,
+            fps: 50,
             debug: false,
             width: PW,
             height: PH

@@ -33,6 +33,8 @@ class BootScene extends Phaser.Scene{
         this.load.image('emblemMoon', 'img/EmblemMoon.png');
         this.load.image('emblemGem', 'img/EmblemGem.png');
         this.load.image('emblemFlame', 'img/EmblemFlame.png');
+        this.load.image('fireBracelet', 'img/firebracelet.png');
+        this.load.image('apple', 'img/apple.png');
 
         // Spritesheets
         this.load.spritesheet('wizard1', 'img/wizard1.png',{ frameWidth: 32, frameHeight: 32 });
@@ -73,6 +75,8 @@ class BootScene extends Phaser.Scene{
         this.load.spritesheet('flamingRock', 'img/flameingrock.png',{ frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('villagerSword', 'img/villagerSword.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('potionV', 'img/potion.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('firefly', 'img/Fly.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('coinSpin', 'img/CoinSpin.png',{ frameWidth: 16, frameHeight: 16 });
 
         // Audio
         this.load.audio('theme1', 'audio/music/Togetherwearestronger.mp3');
@@ -152,7 +156,7 @@ class BootScene extends Phaser.Scene{
               {
                   id:'lostShell',npc:'snalGuy',started:false,complete:false
                   ,itemRequired:"snailshell"
-                  ,itemGiven:"heartCharm"
+                  ,goldGiven:100
                   ,txtStart:"Hi, I have lost my other shell. Can you find it? I will give you 100 coins."
                   ,txtActive:"Did you find my shell?"
                   ,txtComplete:"Thanks! Here's your gold."
@@ -723,6 +727,20 @@ class BootScene extends Phaser.Scene{
             frameRate: 6,
             repeat: 0
         };
+        animConfigs.firefly = {
+            key: 'firefly',
+            frames: this.anims.generateFrameNumbers('firefly', { start: 0, end: 7, first: 0 }),
+            frameRate: 4,
+            repeat: -1
+        };
+        animConfigs.coinSpin = {
+            key: 'coinSpin',
+            frames: this.anims.generateFrameNumbers('coinSpin', { start: 0, end: 4, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+
+
 
         this.scene.start('MenuScene');
     }
