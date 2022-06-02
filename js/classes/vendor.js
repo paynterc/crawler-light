@@ -21,8 +21,7 @@ class Vendor extends Phaser.Physics.Arcade.Sprite {
     interact(){
 //        if(this.interacting) return false;
 //        this.interacting = true;
-        let apple = items.filter(function(m) { return  m.id=="apple"; })
-        this.myScene.store.setStoreItems(apple);
+
         this.myScene.showStore();
     }
 }

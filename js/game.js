@@ -1,5 +1,5 @@
 var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, gold, lives, enemies, gridCenterX, gridCenterY, missions, gameEvents, tips, lvlId, mediaService, soldLamb, path
-,towns, townsData, tipsData, missionsData, maxLives;
+,towns, townsData, tipsData, missionsData, maxLives, curHero, savedGameExists;
 const W = 480;
 const H = 288;
 const PW = W*4;//physics world width
@@ -20,7 +20,7 @@ const PORTAL1 = 4;
 const PORTAL2 = 5;
 const PORTAL3 = 6;
 const PORTAL4 = 7;
-
+const LIGHT_RADIUS = 75;
 // Enemy states
 const STATE_EN_IDLE = 0;
 const STATE_EN_MOVE = 1;
@@ -73,6 +73,8 @@ const g2Px = function(n){
     //+ (WALLSIZE/2)
 }
 
+
+
 const items = [
 {id:'lamb',img:'lambFace',name:"lamb",price:5},
 {id:'heartCharm',img:'heartCharm',name:"Heart Charm",price:50,description:"Gives one health on entering a new level."},
@@ -83,9 +85,26 @@ const items = [
 {id:'starEmber',img:'fireball',name:"Fire Wisp",price:15},
 {id:'potionV',img:'potionV',name:"Potion of Vigor",price:50,description:"Increases maximum health by one.",anm:"potionVanm"},
 {id:'apple',img:'apple',name:"Apple",price:10,description:"Grants 1 health at start of new level. Consumed on use."},
+{id:'starKey',img:'starKey',name:"Star Key",price:0,description:"What door does this open?"},
 ];
 
+const heroes  = [
+   {img:'rogue',name:"Rogue",anmIdl:'rogueIdle',anmRun:'rogueRun',yOffset:-48},
+   {img:'wizard',name:"Wizard",anmIdl:'wizard1Walk',anmRun:'wizard1Walk',yOffset:0},
+];
+curHero = heroes[0];
 
+
+const setGameDefaults =function() {
+    gold = 0;
+    lives=50;
+    soldLamb=false,
+    path=[];
+}
+
+const saveGame = function(gameData){
+    localStorage.setItem('crawlerData',JSON.stringify(gameData));
+}
 
 // To access game: this.sys.game
 var config = {
@@ -109,7 +128,7 @@ var config = {
     },
     parent: 'ph_game',
     backgroundColor: '#000000',
-    scene: [BootScene,MenuScene,GameScene,SettingsScene,HudScene],
+    scene: [BootScene,MenuScene,SelectScene,GameScene,SettingsScene,HudScene],
     physics: {
         default: 'arcade',
         arcade: {

@@ -163,7 +163,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     destroyIt(){
         enemies--;
-        gold++;
         this.myScene.events.emit('enemyDied',this.texture.key,this.x,this.y);
         this.myScene.events.emit('enemiesUpdated');
 

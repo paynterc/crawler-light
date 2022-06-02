@@ -13,7 +13,7 @@ class EvilTree extends Enemy {
 
         this.attackVelocity = 200;
         this.agroRange=90;
-        this.hp=50;
+        this.hp=30;
         this.attackDamage = 4;
         this.myAttackFrequency=200;
 	    this.body.setSize(60,60);

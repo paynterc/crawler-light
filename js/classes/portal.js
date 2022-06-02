@@ -33,7 +33,9 @@ class Portal extends Phaser.Physics.Arcade.Sprite {
 
     updateConfig(){
         this.myGroup.add(this);
-        this.play(this.anm);
+        if(this.anm){
+            this.play(this.anm);
+        }
         this.setAnimationComplete();
         if(this.type=='moon'){
             this.myScene.add.image(this.x,this.y-24,'emblemMoon').setDepth(this.depth+10000);

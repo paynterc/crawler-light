@@ -4,6 +4,7 @@ class Mob extends Npc {
     updateConfig(){
         this.doesMove = true;
         this.timedInteract=false;
+        this.myBumpTimer = this.myBumpFrequency;
     }
 
 

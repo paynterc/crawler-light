@@ -14,6 +14,7 @@ class BootScene extends Phaser.Scene{
         this.load.image('equalizer', 'img/ui/Equalizer34x.png');
         this.load.image('heart', 'img/Heart.png');
         this.load.image('grassBg', 'img/grass.png');
+        this.load.image('grassBgDark', 'img/grassDark.png');
         this.load.image('hedge', 'img/hedge64.png');
         this.load.image('forestPortalUsed', 'img/PortalUsed.png');
         this.load.image('lambFace', 'img/lambFace.png');
@@ -29,12 +30,15 @@ class BootScene extends Phaser.Scene{
         this.load.image('redBolt', 'img/lightningBolt.png');
         this.load.image('bush', 'img/bush.png');
         this.load.image('bushFall', 'img/BushFall.png');
+        this.load.image('bushNight', 'img/bushNight.png');
         this.load.image('vendor', 'img/vendor.png');
         this.load.image('emblemMoon', 'img/EmblemMoon.png');
         this.load.image('emblemGem', 'img/EmblemGem.png');
         this.load.image('emblemFlame', 'img/EmblemFlame.png');
         this.load.image('fireBracelet', 'img/firebracelet.png');
         this.load.image('apple', 'img/apple.png');
+        this.load.image('uiArrow', 'img/ui/uiArrow.png');
+        this.load.image('starKey', 'img/starKey.png');
 
         // Spritesheets
         this.load.spritesheet('wizard1', 'img/wizard1.png',{ frameWidth: 32, frameHeight: 32 });
@@ -77,6 +81,14 @@ class BootScene extends Phaser.Scene{
         this.load.spritesheet('potionV', 'img/potion.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('firefly', 'img/Fly.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('coinSpin', 'img/CoinSpin.png',{ frameWidth: 16, frameHeight: 16 });
+        this.load.spritesheet('hog', 'img/hog.png',{ frameWidth: 36, frameHeight: 36 });
+        this.load.spritesheet('darkEnergy', 'img/darkEnergy.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('badWizard', 'img/badWizard.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('creeper', 'img/thePreservedCreeper.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('creeperDie', 'img/thePreservedCreeperDeath.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('peasant1', 'img/peasant1.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('peasant2', 'img/peasant2.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('starPortal', 'img/starPortal.png',{ frameWidth: 64, frameHeight: 64 });
 
         // Audio
         this.load.audio('theme1', 'audio/music/Togetherwearestronger.mp3');
@@ -108,9 +120,12 @@ class BootScene extends Phaser.Scene{
 
         enemies = 0;
         lvlId = null;
+
         let saveDataRaw = localStorage.getItem('crawlerData');
         let saveData = JSON.parse(saveDataRaw) || {};
         this.backpack.items = saveData.inventory || [];
+        savedGameExists = saveData.lives > 0;
+        curHero = saveData.curHero || heroes[0];
         lives = saveData.lives || 10;
         gold = saveData.gold || 0;
         soldLamb = saveData.soldLamb || false;
@@ -119,7 +134,7 @@ class BootScene extends Phaser.Scene{
         townsData = [
                {id:1,name:"Emberbow",grid:undefined,state:0,bossLvl:"boss1",missionId:"bossGiant"},
                {id:2,name:"Winterstone",grid:undefined,state:0,bossLvl:"boss2",missionId:"bossSword"},
-               {id:3,name:"Nightholme",grid:undefined,state:0,bossLvl:"boss3",missionId:"bossTree"},
+               {id:3,name:"Nightholme",grid:undefined,state:0,bossLvl:"boss3",missionId:"bossCreeper"},
            ]
 
         towns = saveData.towns || townsData;
@@ -191,11 +206,11 @@ class BootScene extends Phaser.Scene{
                 ,isRandom:false
              },
              {
-              id:'bossTree',npc:'snalGuy',npcName:'Snal',started:false,complete:false
+              id:'bossCreeper',npc:'snalGuy',npcName:'Snal',started:false,complete:false
               ,itemRequired:"starEmber"
               ,itemGiven:"heartCharm"
-              ,txtStart:"An evil tree has chased everyone away. Maybe you can defeat him. He's through the stone portal."
-              ,txtActive:"Did you defeat the evil tree? It's through that stone portal."
+              ,txtStart:"Some creepy monster has chased everyone away. Maybe you can defeat him. He's through the stone portal."
+              ,txtActive:"Did you defeat the creepy monster? It's through that stone portal."
               ,txtComplete:"Thank you!"
               ,isRandom:false
            }
@@ -313,7 +328,7 @@ class BootScene extends Phaser.Scene{
         animConfigs.evilTreeDie = {
             key: 'evilTreeDie',
             frames: this.anims.generateFrameNumbers('evilTree', { start: 5, end: 12, first: 5 }),
-            frameRate: 12,
+            frameRate: 6,
             repeat: 0
         };
 
@@ -739,9 +754,126 @@ class BootScene extends Phaser.Scene{
             frameRate: 12,
             repeat: -1
         };
+        animConfigs.hogWalk = {
+            key: 'hogWalk',
+            frames: this.anims.generateFrameNumbers('hog', { start: 0, end: 1, first: 0 }),
+            frameRate: 6,
+            repeat: -1
+        };
+        animConfigs.hogAttack = {
+            key: 'hogAttack',
+            frames: this.anims.generateFrameNumbers('hog', { start: 0, end: 1, first: 0 }),
+            frameRate: 18,
+            repeat: 5
+        };
+        animConfigs.hogTell = {
+            key: 'hogTell',
+            frames: this.anims.generateFrameNumbers('hog', { start: 0, end: 0, first: 0 }),
+            frameRate: 2,
+            repeat: 0
+        };
+        animConfigs.darkEnergy = {
+            key: 'darkEnergy',
+            frames: this.anims.generateFrameNumbers('darkEnergy', { start: 0, end: 3, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.badWizardWalk = {
+            key: 'badWizardWalk',
+            frames: this.anims.generateFrameNumbers('badWizard', { start: 0, end: 1, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.badWizardTell = {
+            key: 'badWizardTell',
+            frames: [
+                {key:'badWizard',frame:0,duration:300},
+                {key:'badWizard',frame:1,duration:300},
+                {key:'badWizard',frame:2,duration:300},
+                {key:'badWizard',frame:3,duration:300},
+                {key:'badWizard',frame:4,duration:1},
+                {key:'badWizard',frame:5,duration:1},
+            ],
+            repeat: 0
+        };
+        animConfigs.badWizardAttack = {
+            key: 'badWizardAttack',
+            frames: this.anims.generateFrameNumbers('badWizard', { start: 1, end: 2, first: 0 }),
+            frameRate: 12,
+            repeat: 30
+        };
 
+        animConfigs.bossCreeperWalk = {
+            key: 'bossCreeperWalk',
+            frames: this.anims.generateFrameNumbers('creeper', { start: 3, end: 5, first: 3 }),
+            frameRate: 12,
+            repeat: -1
+        };
+        animConfigs.bossCreeperTell = {
+            key: 'bossCreeperTell',
+            frames: this.anims.generateFrameNumbers('creeper', { start: 5, end: 6, first: 5 }),
+            frameRate: 12,
+            repeat: 6
+        };
+        animConfigs.bossCreeperAttack = {
+            key: 'bossCreeperAttack',
+            frames: this.anims.generateFrameNumbers('creeper', { start: 4, end: 5, first: 4 }),
+            frameRate: 12,
+            repeat: 5
+        };
+        animConfigs.bossCreeperDie = {
+            key: 'bossCreeperDie',
+            frames: [
+                {key:'creeperDie',frame:0,duration:10},
+                {key:'creeperDie',frame:1,duration:10},
+                {key:'creeperDie',frame:0,duration:10},
+                {key:'creeperDie',frame:1,duration:10},
+                {key:'creeperDie',frame:0,duration:10},
+                {key:'creeperDie',frame:1,duration:10},
+                {key:'creeperDie',frame:0,duration:10},
+                {key:'creeperDie',frame:1,duration:10},
+                {key:'creeperDie',frame:2,duration:10},
+                {key:'creeperDie',frame:3,duration:10},
+            ],
+            repeat: 0
+        };
+        animConfigs.bossCreeperIntro = {
+            key: 'bossCreeperIntro',
+            frames: this.anims.generateFrameNumbers('creeper', { start: 0, end: 3, first: 0 }),
+            frameRate: 2,
+            repeat: 0
+        };
 
-
+        animConfigs.peasant1Walk = {
+            key: 'peasant1Walk',
+            frames: this.anims.generateFrameNumbers('peasant1', { start: 0, end: 3, first: 0 }),
+            frameRate: 4,
+            repeat: -1
+        };
+        animConfigs.peasant2Walk = {
+            key: 'peasant2Walk',
+            frames: this.anims.generateFrameNumbers('peasant2', { start: 0, end: 3, first: 0 }),
+            frameRate: 4,
+            repeat: -1
+        };
+        animConfigs.starPortalOpening = {
+            key: 'starPortalOpening',
+            frames: this.anims.generateFrameNumbers('starPortal', { start: 1, end: 4, first: 1 }),
+            frameRate: 8,
+            repeat: 0
+        };
+        animConfigs.starPortalOpen = {
+            key: 'starPortalOpen',
+            frames: this.anims.generateFrameNumbers('starPortal', { start: 5, end: 7, first: 5 }),
+            frameRate: 8,
+            repeat: -1
+        };
+        animConfigs.starPortalClosed = {
+            key: 'starPortalClosed',
+            frames: this.anims.generateFrameNumbers('starPortal', { start: 0, end: 0, first: 0 }),
+            frameRate: 0,
+            repeat: 0
+        };
         this.scene.start('MenuScene');
     }
 

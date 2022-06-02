@@ -22,6 +22,7 @@ class Npc extends Phaser.GameObjects.Sprite {
         this.defaultAcc = config.defaultAcc || 10;
         this.maxVelocity = config.maxVelocity || 15;
         this.timedInteract = config.timedInteract || true;
+        this.myBumpFrequency = config.hasOwnProperty('bumpFrequency') ? config.bumpFrequency : 10;
 
         this.missionId = config.missionId || false;
         this.tip = config.tip || null;
@@ -46,12 +47,13 @@ class Npc extends Phaser.GameObjects.Sprite {
 
     updateConfig(){
         let mId = this.missionId;
-
         let mFiltered =  missions.filter(function(m) {
           return m.id == mId;
         });
-
         this.mission = mFiltered[0];
+
+        this.myBumpTimer = this.myBumpFrequency;
+
     }
 
     myPreUpdate(time,delta){
@@ -61,9 +63,9 @@ class Npc extends Phaser.GameObjects.Sprite {
 
 
         this.myPreUpdate(time,delta);
-
-        if(this.interactCoolTimer>0) this.interactCoolTimer--;
-        this.interacting = this.interactCoolTimer>0;
+        if(this.myBumpTimer>0) this.myBumpTimer--;
+//        if(this.interactCoolTimer>0) this.interactCoolTimer--;
+//        this.interacting = this.interactCoolTimer>0;
         this.depth=this.y;
         switch (this.myState) {
             case STATE_EN_IDLE:
@@ -100,18 +102,21 @@ class Npc extends Phaser.GameObjects.Sprite {
             this.play(this.anmWalk);
         }
 
+        if(this.myBumpTimer<1){
+            this.myBumpTimer = this.myBumpFrequency;
+            if(this.body.touching.right){
+                this.body.acceleration.x = this.defaultAcc * -1;
+            }else if(this.body.touching.left){
+                this.body.acceleration.x = this.defaultAcc;
+            }
 
-        if(this.body.touching.right){
-            this.body.acceleration.x = this.defaultAcc * -1;
-        }else if(this.body.touching.left){
-            this.body.acceleration.x = this.defaultAcc;
+            if(this.body.touching.down){
+                this.body.acceleration.y = this.defaultAcc * -1;
+            }else if(this.body.touching.up){
+                this.body.acceleration.y = this.defaultAcc;
+            }
         }
 
-        if(this.body.touching.down){
-            this.body.acceleration.y = this.defaultAcc * -1;
-        }else if(this.body.touching.up){
-            this.body.acceleration.y = this.defaultAcc;
-        }
 
         this.flipX = this.body.velocity.x < 0;
 

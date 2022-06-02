@@ -106,6 +106,7 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
     open(playerItems,playerGold){
         this._setPlayerItems(playerItems);
         this.playerGold=playerGold;
+        this.storeItems=this.storeItemsReal.map(a => {return {...a}});
         this._setGoldText();
         this._drawInventory();
         this._show();
@@ -122,7 +123,11 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
     }
 
     setStoreItems(items){
-        this.storeItems=items;
+        console.log('add store items',items);
+        this.storeItems=[];
+        this.storeItems=items.map(a => {return {...a}});
+        this.storeItemsReal=items.map(a => {return {...a}});
+        console.log('storeItems',this.storeItems);
     }
     _setPlayerItems(items){
         // make a clone so we aren't referencing the original array.
@@ -197,7 +202,7 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
         let rtnItems = this.playerItems.map(a => {return {...a}});
         let rtnStoreItems = this.storeItems.map(a => {return {...a}});
         let rtnGold = this.playerGold;
-
+        this.storeItemsReal = this.storeItems.map(a => {return {...a}});
         this._close();
         if(this.drawScene){
             this.drawScene.confirmStore(rtnItems,rtnGold,rtnStoreItems);
@@ -211,7 +216,9 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
         this.storeTexts.children.each((e)=>{
             e.visible=false;
         });
-        this.graphics.visible = false;
+        if(this.graphics){
+            this.graphics.visible = false;
+        }
     }
     _show(){
         if(this.closeBtn) this.closeBtn.visible=true;

@@ -39,7 +39,7 @@ class HudScene extends Phaser.Scene{
         this.pathImages = this.add.group();
         this.drawPath();
 
-        this.gameOverText = this.add.text(centerX, centerY, "GAME OVER", { fontSize: '64px', fontFamily: 'FourBitRegular' });
+        this.gameOverText = this.add.text(centerX, centerY-64, "GAME OVER", { fontSize: '64px', fontFamily: 'FourBitRegular' });
         this.gameOverText.setOrigin(0.5);
         this.gameOverText.setVisible(false);
 
@@ -102,6 +102,7 @@ class HudScene extends Phaser.Scene{
             this.gameScene.events.on('bossDied', this.hideHealthbar, this);
             this.gameScene.events.on('bossHealthUpdate', this.updateHealthbar, this);
             this.gameScene.events.on('newLevel', this.refreshAll, this);
+            this.gameScene.events.on('playerWinsGame', this.winGame, this);
 
 
 
@@ -125,8 +126,12 @@ class HudScene extends Phaser.Scene{
             this.gameScene.events.off('bossDied', this.hideHealthbar);
             this.gameScene.events.off('bossHealthUpdate', this.updateHealthbar);
             this.gameScene.events.off('newLevel', this.refreshAll);
+            this.gameScene.events.off('playerWinsGame', this.winGame);
 
+    }
 
+    winGame(){
+        this.gameOverText.setText("YOU WIN!!!!").setVisible(true);
     }
 
     hideHealthbar(){
@@ -198,6 +203,7 @@ class HudScene extends Phaser.Scene{
 
         this.resumeGame();
         this.updateEnemies();
+        this.refreshAll();
 
     }
     showText(txt){
