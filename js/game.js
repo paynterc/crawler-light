@@ -1,5 +1,5 @@
 var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, gold, lives, enemies, gridCenterX, gridCenterY, missions, gameEvents, tips, lvlId, mediaService, soldLamb, path
-,towns, townsData, tipsData, missionsData, maxLives, curHero, savedGameExists;
+,towns, maxLives, curHero, savedGameExists;
 const W = 480;
 const H = 288;
 const PW = W*4;//physics world width
@@ -30,6 +30,7 @@ const STATE_EN_ATTACK = 4;
 const STATE_EN_JUMP = 5;
 const STATE_EN_DIE = 6;
 const STATE_EN_INTRO = 7;
+const STATE_EN_DEAD = 8;
 
 const DEPTH_BG = -1000;
 const DEPTH_PORTAL = -900;
@@ -73,7 +74,18 @@ const g2Px = function(n){
     //+ (WALLSIZE/2)
 }
 
+const townsData = [
+       {id:1,name:"Emberbow",grid:undefined,state:0,bossLvl:"boss1",missionId:"bossGiant"},
+       {id:2,name:"Winterstone",grid:undefined,state:0,bossLvl:"boss2",missionId:"bossSword"},
+       {id:3,name:"Nightholme",grid:undefined,state:0,bossLvl:"boss3",missionId:"bossCreeper"},
+   ]
 
+
+const tipsData =[
+      {shown:false,txt:"Something has put a curse on the forest and now it keeps changing. There are three villages, but the paths to them have been lost and people can't find their way home. Can you help find the villages?"},
+      {shown:false,txt:"The portals won't open until you defeat all the monsters in this part of the forest."},
+      {shown:false,txt:"The people in the first village always lit two fires before the new moon."}
+  ];
 
 const items = [
 {id:'lamb',img:'lambFace',name:"lamb",price:5},
@@ -86,6 +98,74 @@ const items = [
 {id:'potionV',img:'potionV',name:"Potion of Vigor",price:50,description:"Increases maximum health by one.",anm:"potionVanm"},
 {id:'apple',img:'apple',name:"Apple",price:10,description:"Grants 1 health at start of new level. Consumed on use."},
 {id:'starKey',img:'starKey',name:"Star Key",price:0,description:"What door does this open?"},
+];
+
+// BE SURE ALL MISSION ITEMS ARE IN THE ITEMS LIST ABOVE
+const missionsData = [
+{
+  id:'lostLamb',npc:'shepherd',started:false,complete:false
+  ,itemRequired:"lamb"
+  ,itemGiven:"heartCharm"
+  ,txtStart:"Please help me find my lost lamb. Those monsters chased it away."
+  ,txtActive:"Did you find my lamb?"
+  ,txtComplete:"Thank you for bringing back my lamb! Here, take this magic charm."
+  ,isRandom:true
+},
+{
+  id:'witchMushroom',npc:'witch',started:false,complete:false
+  ,itemRequired:"mushroom"
+  ,itemGiven:"potionV"
+  ,txtStart:"I need one mushroom. If you bring me one I'll give you a potion.."
+  ,txtActive:"I still need that mushroom."
+  ,txtComplete:"Thanks for the mushroom. Here's your potion."
+  ,isRandom:true
+},
+{
+    id:'lostShell',npc:'snalGuy',started:false,complete:false
+    ,itemRequired:"snailshell"
+    ,goldGiven:100
+    ,txtStart:"Hi, I have lost my other shell. Can you find it? I will give you 100 coins."
+    ,txtActive:"Did you find my shell?"
+    ,txtComplete:"Thanks! Here's your gold."
+    ,isRandom:true
+ },
+{
+   id:'buidFire',npc:'goboFire',npcName:'Gobo',started:false,complete:false
+   ,itemRequired:"starEmber"
+   ,itemGiven:"heartCharm"
+   ,txtStart:"I don't have any way to light my campfire. Can you get a fire wisp from a mogus and bring it to me."
+   ,txtActive:"I still can't light this fire."
+   ,txtComplete:"Finally! Here, take this magic charm."
+   ,anmComplete:'goboFireLit'
+   ,isRandom:true
+},
+  {
+   id:'bossSword',npc:'villagerSword',npcName:'Sword Villager',started:false,complete:false
+   ,itemRequired:"starEmber"
+   ,itemGiven:"heartCharm"
+   ,txtStart:"A horrible enchanted sword has chased everyone from the village. If you defeat it they might come back."
+   ,txtActive:"Did you defeat the giant sword? It's through that stone portal."
+   ,txtComplete:"Thank you!"
+   ,isRandom:false
+},
+ {
+  id:'bossGiant',npc:'gobovillager',npcName:'Gobo Villager',started:false,complete:false
+  ,itemRequired:"starEmber"
+  ,itemGiven:"heartCharm"
+  ,txtStart:"A fire giant has chased everyone away. Maybe you can defeat him. He's through the stone portal."
+  ,txtActive:"Did you defeat the giant? It's through that stone portal."
+  ,txtComplete:"Thank you!"
+  ,isRandom:false
+},
+{
+id:'bossCreeper',npc:'snalGuy',npcName:'Snal',started:false,complete:false
+,itemRequired:"starEmber"
+,itemGiven:"heartCharm"
+,txtStart:"Some creepy monster has chased everyone away. Maybe you can defeat him. He's through the stone portal."
+,txtActive:"Did you defeat the creepy monster? It's through that stone portal."
+,txtComplete:"Thank you!"
+,isRandom:false
+}
 ];
 
 const heroes  = [

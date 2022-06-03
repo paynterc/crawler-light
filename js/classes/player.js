@@ -16,6 +16,7 @@ class Player extends Phaser.GameObjects.Sprite {
         this.anmAttack = 'wizard1Attack';
         this.anmWalk = 'wizard1Walk';
         this.anmRun= 'wizard1Walk';
+        this.anmDie= null;
         this.bdyW = 16;
         this.bdyH = 32;
         this.bdyX = 6;
@@ -81,6 +82,9 @@ class Player extends Phaser.GameObjects.Sprite {
                 break;
             case STATE_EN_DIE:
                 this.die(time,delta);
+                break;
+            case STATE_EN_DEAD:
+                this.dead();
                 break;
             default:
                 this.idle(time,delta);
@@ -186,14 +190,37 @@ class Player extends Phaser.GameObjects.Sprite {
 
     applyDamage(D){
         if(!D) return false
+        if(this.myState === STATE_EN_DEAD) return false;
         lives-=D;
         this.myScene.events.emit('playerTookDamage');
         this.myScene.hitHurtPlr.play();
 
         if(lives<=0){
             lives=0;
-            //this.die();
+            this.die();
         }
     }
 
+    die(){
+        this.myState = STATE_EN_DEAD;
+        if(this.anmDie){
+            // create a corpse object that you won't collide with
+            let corpse = new Corpse(this.myScene,this.x,this.y);
+            if(this.onCorpseDestroy){
+                corpse.onDestroy = this.onCorpseDestroy;
+            }
+            corpse.play(this.anmDie);
+        }else{
+            this.onCorpseDestroy();
+        }
+        this.visible = false;
+    }
+
+    onCorpseDestroy(){
+        this.myScene.events.emit('playerDied');
+    }
+
+    dead(){
+
+    }
 }

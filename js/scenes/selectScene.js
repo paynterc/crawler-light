@@ -12,6 +12,7 @@ class SelectScene extends Phaser.Scene{
     create ()
     {
         let that = this;
+        this.bootScene = this.scene.get('BootScene');
 
         this.backpack = this.plugins.get('BackpackPlugin');
 
@@ -23,7 +24,7 @@ class SelectScene extends Phaser.Scene{
         this.startText.setOrigin(0.5);
 
         this.startText.setInteractive().on('pointerdown', function(pointer, localX, localY, event){
-            setGameDefaults();
+            that.bootScene.newGame();
             that.backpack.items = [];
             that.scene.launch('HudScene');
             that.scene.start('GameScene');

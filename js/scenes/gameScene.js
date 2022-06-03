@@ -23,12 +23,16 @@ class GameScene extends Phaser.Scene {
         rightKey = this.input.keyboard.addKey('d');  // Get key object
 
         this.hudScene = this.scene.get('HudScene');
+        this.bootScene = this.scene.get('BootScene');
 
     }
 
     create()
     {
         let that = this;
+        enemies = 0;
+
+
         this.cameras.main.setBackgroundColor(0x000000);
         this.lights=false;
         this.addAnimations();
@@ -258,21 +262,13 @@ class GameScene extends Phaser.Scene {
 
     }
 
-    newGame(){
+
+
+    gameRestart(){
         enemies = 0;
         lvlId = null;
-        this.backpack.items = [];
-        lives = 10;
-        gold = 0;
-        soldLamb = false;
-        path=[];
-        towns = townsData;
-        tips = tipsData;
-        missions = missionsData;
-
-        this.events.emit('scoreUpdated',this);
-
-        this.restart=true;
+        this.bootScene.loadSavedGame();
+        this.restart = true;
     }
 
 
@@ -340,9 +336,6 @@ class GameScene extends Phaser.Scene {
         this.restart=true;
     }
 
-    gameRestart(){
-
-    }
 
     testEvent(num){
         console.log("GAME SCENE EVENT",num);
@@ -953,7 +946,7 @@ class GameScene extends Phaser.Scene {
             theMission = incompletMissions[Phaser.Math.Between(0,incompletMissions.length-1)];
             let RC = this.findSpotOnGrid();
             new Npc(this,g2Px(RC[0]),g2Px(RC[1]),{ img:theMission.npc,missionId:theMission.id,anmComplete:theMission.anmComplete });
-
+            this.gameGrid[RC[0]][RC[1]] = OCCUPIED;
         }
 
         // Don't place the "tips" snal if there is already a snal mission active.
@@ -1267,11 +1260,7 @@ class GameScene extends Phaser.Scene {
         makeChompPatch(xx,yy){
             let xOff=16;
             let yOff=24;
-            new ChompPlant(this,xx-xOff,yy-yOff,{img:'chompPlant'});
-            new ChompPlant(this,xx+xOff,yy-yOff,{img:'chompPlant'});
-            new ChompPlant(this,xx-xOff,yy,{img:'chompPlant'});
-            new ChompPlant(this,xx+xOff,yy,{img:'chompPlant'});
-
+            new ChompPlant(this,xx,yy,{img:'chompPlant'});
         }
 
         drawTimer(){

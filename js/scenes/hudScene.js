@@ -43,16 +43,16 @@ class HudScene extends Phaser.Scene{
         this.gameOverText.setOrigin(0.5);
         this.gameOverText.setVisible(false);
 
-        this.restartText = this.add.text(W-32, H-32, "RESTART", { fontSize: '8px', fontFamily: 'FourBitRegular' });
+        this.restartText = this.add.text(centerX, centerY, "Try again", { fontSize: '48px', fontFamily: 'FourBitRegular' });
         this.restartText.setOrigin(0.5);
         this.restartText.setInteractive().on('pointerdown', function(pointer, localX, localY, event){
-            that.gameScene.newGame();
-            that.refreshAll();
+//            that.gameScene.newGame();
+            that.gameScene.gameRestart();
         }).on('pointerover',function(){
             this.setTint('0x00ff00');
         }).on('pointerout',function(){
             this.setTint('0xffffff');
-        });
+        }).setVisible(false);
 
         this.dialogModal.init({dialogSpeed:12,padding:64});
 //        this.dialogModal.setText('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', true);
@@ -103,6 +103,7 @@ class HudScene extends Phaser.Scene{
             this.gameScene.events.on('bossHealthUpdate', this.updateHealthbar, this);
             this.gameScene.events.on('newLevel', this.refreshAll, this);
             this.gameScene.events.on('playerWinsGame', this.winGame, this);
+            this.gameScene.events.on('playerDied', this.playerDead, this);
 
 
 
@@ -127,11 +128,17 @@ class HudScene extends Phaser.Scene{
             this.gameScene.events.off('bossHealthUpdate', this.updateHealthbar);
             this.gameScene.events.off('newLevel', this.refreshAll);
             this.gameScene.events.off('playerWinsGame', this.winGame);
+            this.gameScene.events.off('playerDied', this.playerDead);
 
     }
 
     winGame(){
         this.gameOverText.setText("YOU WIN!!!!").setVisible(true);
+    }
+
+    playerDead(){
+        this.gameOverText.setText("YOU DIED :(").setVisible(true);
+        this.restartText.setVisible(true);
     }
 
     hideHealthbar(){
@@ -303,5 +310,7 @@ class HudScene extends Phaser.Scene{
         this.drawLives();
         this.drawPath();
         this.backpack.refresh();
+        this.gameOverText.setVisible(false);
+        this.restartText.setVisible(false);
     }
 }

@@ -89,6 +89,7 @@ class BootScene extends Phaser.Scene{
         this.load.spritesheet('peasant1', 'img/peasant1.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('peasant2', 'img/peasant2.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('starPortal', 'img/starPortal.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('rogueDie', 'img/rogueDie.png',{ frameWidth: 32, frameHeight: 32 });
 
         // Audio
         this.load.audio('theme1', 'audio/music/Togetherwearestronger.mp3');
@@ -102,14 +103,41 @@ class BootScene extends Phaser.Scene{
 
     }
 
+    loadSavedGame()
+    {
+        let saveDataRaw = localStorage.getItem('crawlerData');
+        let saveData = JSON.parse(saveDataRaw) || {};
+        this.backpack.items = saveData.inventory || [];
+        savedGameExists = saveData.lives > 0;
+        curHero = saveData.curHero || heroes[0];
+        lives = saveData.lives || 10;
+        gold = saveData.gold || 0;
+        soldLamb = saveData.soldLamb || false;
+//        path = saveData.path || [];//keep track of the portals passed through
+        path=[];
+
+        towns = saveData.towns || townsData.map(a => {return {...a}});
+        tips = saveData.tips || tipsData.map(a => {return {...a}});
+        missions = saveData.missions || missionsData.map(a => {return {...a}});
+    }
+
+    newGame(){
+
+        enemies = 0;
+        lvlId = null;
+        lives = 50;
+        gold = 0;
+        soldLamb = false;
+        path=[];
+        towns = townsData.map(a => {return {...a}});
+        tips = tipsData.map(a => {return {...a}});
+        missions = missionsData.map(a => {return {...a}});
+
+    }
+
     create ()
     {
-//        this.sys.install('DialogModalPlugin');
-//        console.log(this.sys.dialogModal);
-//        this.plugins.start('RandomNamePlugin', 'myPluginRef1');
 
-//        A global Events Emitter. Not used for now.
-//        gameEvents = new Phaser.Events.EventEmitter();
 
         centerX = this.cameras.main.width / 2;
         centerY = this.cameras.main.height / 2;
@@ -121,101 +149,7 @@ class BootScene extends Phaser.Scene{
         enemies = 0;
         lvlId = null;
 
-        let saveDataRaw = localStorage.getItem('crawlerData');
-        let saveData = JSON.parse(saveDataRaw) || {};
-        this.backpack.items = saveData.inventory || [];
-        savedGameExists = saveData.lives > 0;
-        curHero = saveData.curHero || heroes[0];
-        lives = saveData.lives || 10;
-        gold = saveData.gold || 0;
-        soldLamb = saveData.soldLamb || false;
-        path = saveData.path || [];//keep track of the portals passed through
-
-        townsData = [
-               {id:1,name:"Emberbow",grid:undefined,state:0,bossLvl:"boss1",missionId:"bossGiant"},
-               {id:2,name:"Winterstone",grid:undefined,state:0,bossLvl:"boss2",missionId:"bossSword"},
-               {id:3,name:"Nightholme",grid:undefined,state:0,bossLvl:"boss3",missionId:"bossCreeper"},
-           ]
-
-        towns = saveData.towns || townsData;
-
-        tipsData =[
-              {shown:false,txt:"Something has put a curse on the forest and now it keeps changing. There are three villages, but the paths to them have been lost and people can't find their way home. Can you help find the villages?"},
-              {shown:false,txt:"The portals won't open until you defeat all the monsters in this part of the forest."},
-              {shown:false,txt:"The people in the first village always lit two fires before the new moon."}
-          ];
-
-        tips = saveData.tips || tipsData;
-
-
-        // BE SURE ALL MISSION ITEMS ARE IN THE ITEMS LIST ABOVE
-        missionsData = [
-            {
-                id:'lostLamb',npc:'shepherd',started:false,complete:false
-                ,itemRequired:"lamb"
-                ,itemGiven:"heartCharm"
-                ,txtStart:"Please help me find my lost lamb. Those monsters chased it away."
-                ,txtActive:"Did you find my lamb?"
-                ,txtComplete:"Thank you for bringing back my lamb! Here, take this magic charm."
-                ,isRandom:true
-            },
-            {
-                id:'witchMushroom',npc:'witch',started:false,complete:false
-                ,itemRequired:"mushroom"
-                ,itemGiven:"potionV"
-                ,txtStart:"I need one mushroom. If you bring me one I'll give you a potion.."
-                ,txtActive:"I still need that mushroom."
-                ,txtComplete:"Thanks for the mushroom. Here's your potion."
-                ,isRandom:true
-             },
-              {
-                  id:'lostShell',npc:'snalGuy',started:false,complete:false
-                  ,itemRequired:"snailshell"
-                  ,goldGiven:100
-                  ,txtStart:"Hi, I have lost my other shell. Can you find it? I will give you 100 coins."
-                  ,txtActive:"Did you find my shell?"
-                  ,txtComplete:"Thanks! Here's your gold."
-                  ,isRandom:true
-               },
-             {
-                 id:'buidFire',npc:'goboFire',npcName:'Gobo',started:false,complete:false
-                 ,itemRequired:"starEmber"
-                 ,itemGiven:"heartCharm"
-                 ,txtStart:"I don't have any way to light my campfire. Can you get a fire wisp from a mogus and bring it to me."
-                 ,txtActive:"I still can't light this fire."
-                 ,txtComplete:"Finally! Here, take this magic charm."
-                 ,anmComplete:'goboFireLit'
-                 ,isRandom:true
-              },
-                {
-                 id:'bossSword',npc:'villagerSword',npcName:'Sword Villager',started:false,complete:false
-                 ,itemRequired:"starEmber"
-                 ,itemGiven:"heartCharm"
-                 ,txtStart:"A horrible enchanted sword has chased everyone from the village. If you defeat it they might come back."
-                 ,txtActive:"Did you defeat the giant sword? It's through that stone portal."
-                 ,txtComplete:"Thank you!"
-                 ,isRandom:false
-              },
-               {
-                id:'bossGiant',npc:'gobovillager',npcName:'Gobo Villager',started:false,complete:false
-                ,itemRequired:"starEmber"
-                ,itemGiven:"heartCharm"
-                ,txtStart:"A fire giant has chased everyone away. Maybe you can defeat him. He's through the stone portal."
-                ,txtActive:"Did you defeat the giant? It's through that stone portal."
-                ,txtComplete:"Thank you!"
-                ,isRandom:false
-             },
-             {
-              id:'bossCreeper',npc:'snalGuy',npcName:'Snal',started:false,complete:false
-              ,itemRequired:"starEmber"
-              ,itemGiven:"heartCharm"
-              ,txtStart:"Some creepy monster has chased everyone away. Maybe you can defeat him. He's through the stone portal."
-              ,txtActive:"Did you defeat the creepy monster? It's through that stone portal."
-              ,txtComplete:"Thank you!"
-              ,isRandom:false
-           }
-        ];
-        missions = saveData.missions || missionsData;
+        this.loadSavedGame();
 
         mediaService = new MediaService(this);
         mediaService.setMusic('theme1');
@@ -404,6 +338,12 @@ class BootScene extends Phaser.Scene{
             frames: this.anims.generateFrameNumbers('rogue', { start: 24, end: 31, first: 24 }),
             frameRate: 12,
             repeat: -1
+        };
+        animConfigs.rogueDie = {
+            key: 'rogueDie',
+            frames: this.anims.generateFrameNumbers('rogueDie', { start: 0, end: 5, first: 0 }),
+            frameRate: 8,
+            repeat: 0
         };
         animConfigs.blueBeanWalk = {
             key: 'blueBeanWalk',
@@ -874,6 +814,7 @@ class BootScene extends Phaser.Scene{
             frameRate: 0,
             repeat: 0
         };
+
         this.scene.start('MenuScene');
     }
 

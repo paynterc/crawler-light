@@ -8,6 +8,7 @@ class Rogue extends Player {
         this.anmAttack = 'rogueAttack';
         this.anmWalk = 'rogueRun';
         this.anmRun = 'rogueRun';
+        this.anmDie= 'rogueDie';
 
         this.attacks = 3;
         this.attackCount= 0;
