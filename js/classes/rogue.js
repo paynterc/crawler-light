@@ -2,7 +2,7 @@ class Rogue extends Player {
 
 
     init() {
-
+        this.myClass = 'rogue';
         this.anmDefault = 'rogueRun';
         this.anmIdle = 'rogueIdle';
         this.anmAttack = 'rogueAttack';
@@ -16,10 +16,11 @@ class Rogue extends Player {
         this.bdyW = 16;
         this.bdyH = 24;
         this.bdyX = 100;
-		this.bdyY = 35;
-		this.xOff = 32;
+		    this.bdyY = 35;
+		    this.xOff = 32;
 
         this.maxLives = 6;
+        this.maxSpells=2;
 
     }
 

@@ -1,5 +1,5 @@
 var upKey, leftKey, rightKey, downKey, attKey, spaceKey, activePointer, centerX, centerY, defaultVolume, animConfigs, score, gold, lives, enemies, gridCenterX, gridCenterY, missions, gameEvents, tips, lvlId, mediaService, soldLamb, path
-,towns, maxLives, curHero, savedGameExists;
+,towns, maxLives, curHero, curSpells, savedGameExists, key1, key2, key3, key4, key5, key6, key7;
 const W = 480;
 const H = 288;
 const PW = W*4;//physics world width
@@ -98,7 +98,52 @@ const items = [
 {id:'potionV',img:'potionV',name:"Potion of Vigor",price:50,description:"Increases maximum health by one.",anm:"potionVanm"},
 {id:'apple',img:'apple',name:"Apple",price:10,description:"Grants 1 health at start of new level. Consumed on use."},
 {id:'starKey',img:'starKey',name:"Star Key",price:0,description:"What door does this open?"},
+{id:'scrollIceShield',img:'scrollIceShield',name:"Scroll of Ice Shield",price:50,description:"Grants a spell on next level.",grantSpell:'iceShield'},
+{id:'scrollFireStorm',img:'scrollFireStorm',name:"Scroll of Fire Storm",price:50,description:"Grants a spell on next level.",grantSpell:'fireStorm'},
 ];
+
+
+// SPELLS - Use a system that allows function names to be submitted as strings.
+const spells = [
+  {id:'iceShield',method:'makeIceShield',icon:'iceShieldIcon',cooldown:1000,timer:0},
+  {id:'fireStorm',method:'makeFireStorm',icon:'scrollFireStorm',cooldown:600,timer:0},
+  {id:'shadowForm',method:'makeShadowForm',icon:'shadowFormIcon',cooldown:1600,timer:0},
+];
+
+// Spell map
+// Usage: assign functions to the object. I'm doing this in the player object now.
+// spellMap["makeIceShield"] = makeIceShield;
+const spellMap = {};
+
+
+// this is the method performing execution of functions
+const execFn = function(fnName,ctxt /*, args */)
+{
+  // get passed arguments except first two (fnName, ctx)
+  var args = Array.prototype.slice.call(arguments, 2);
+  // execute the function with passed parameters and return result
+  return spellMap[fnName].apply(ctxt, args);
+}
+/*
+ * Usage
+ */
+
+// (in player object) spellMap["makeIceShield"] = this.makeIceShield;
+// (in player object) execFn("makeIceShield", this, arg1, arg2, arg3);
+
+const getById = function(array,id,clone=false){
+  var idx = array.findIndex(p => p.id==id);
+  if(idx>=0){
+      let itm = array[idx];
+      if(clone){
+        return {...itm};
+      }else{
+        return itm;
+      }
+  }else{
+    return null;
+  }
+}
 
 // BE SURE ALL MISSION ITEMS ARE IN THE ITEMS LIST ABOVE
 const missionsData = [

@@ -30,7 +30,6 @@ class HudScene extends Phaser.Scene{
         this.store = this.plugins.get('StorePlugin');
         this.store.startDrawing(this);
 
-
         this.addEventListeners();
 
         this.lifeImages = this.add.group();
@@ -38,6 +37,12 @@ class HudScene extends Phaser.Scene{
 
         this.pathImages = this.add.group();
         this.drawPath();
+
+        this.drawSpellBacks();
+        this.spellImages = this.add.group();
+        this.spellTimers = this.add.group();
+        this.spellNumbers = this.add.group();
+        this.drawSpells();
 
         this.gameOverText = this.add.text(centerX, centerY-64, "GAME OVER", { fontSize: '64px', fontFamily: 'FourBitRegular' });
         this.gameOverText.setOrigin(0.5);
@@ -53,6 +58,8 @@ class HudScene extends Phaser.Scene{
         }).on('pointerout',function(){
             this.setTint('0xffffff');
         }).setVisible(false);
+
+
 
         this.dialogModal.init({dialogSpeed:12,padding:64});
 //        this.dialogModal.setText('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', true);
@@ -219,7 +226,7 @@ class HudScene extends Phaser.Scene{
 
 
     update(time,delta){
-
+        this.updateSpellTimers();
 
     }
 
@@ -291,6 +298,69 @@ class HudScene extends Phaser.Scene{
         }
     }
 
+    drawSpellBacks(){
+      let xx = W/2 - 32;
+      for (var i = 0; i < this.gameScene.player.maxSpells; i++) {
+        this.add.image(xx,H-64+8,'square').setScale(.5).setDepth(99999).setAlpha(.25).setOrigin(.5,1);
+        xx+= 32
+
+      }
+    }
+
+    drawSpells(){
+      let that = this;
+      this.spellImages.clear(true,true);
+      this.spellTimers.clear(true,true);
+      this.spellNumbers.clear(true,true);
+
+
+
+      let xx = W/2 - 32;
+      let imgIndx = undefined;
+      for (var i = 0; i < curSpells.length; i++) {
+        let spell = curSpells[i];
+        let idx = i;
+        let img = this.add.image(xx,H-64,spell.icon).setScale(.5).setDepth(100000)
+        .setInteractive()
+        .on('pointerover', function () {
+            that.spellNumbers.setVisible(true);
+        })
+        .on('pointerout', function () {
+            that.spellNumbers.setVisible(false);
+        })
+        .on('pointerdown', function(){
+          that.gameScene.events.emit('spellClick',idx);
+        });
+        this.spellImages.add(img);
+
+        let tmr = this.add.image(xx,H-64+8,'square').setScale(.5).setDepth(100001).setAlpha(.5).setVisible(false).setOrigin(.5,1);
+        this.spellTimers.add(tmr);
+        let numTxt = this.add.text(xx,H-64-16, (i+1).toString(), { fontSize: '16px' }).setOrigin(.5,.5);
+        this.spellNumbers.add(numTxt);
+        xx+= 32
+      }
+      this.spellNumbers.setVisible(false);
+
+    }
+
+    updateSpellTimers(){
+
+      if(!this.gameScene.player) return false;
+      for (var i = 0; i < curSpells.length; i++) {
+        let spell = curSpells[i];
+        let timerImg = this.spellTimers.getFirstNth(i+1,true);
+        if(!timerImg) return false;
+        // console.log('timerImg',spell.timer);
+
+        if(spell.timer>0){
+          timerImg.setVisible(true).setScale(.5,spell.timer/spell.cooldown *.5);
+        }else{
+          timerImg.setVisible(false);
+        }
+      }
+
+    }
+
     caughtCatchable(catchable){
         if(catchable.invAdd){
             if(this.backpack.isFull()) return false;
@@ -309,6 +379,8 @@ class HudScene extends Phaser.Scene{
         this.updateGold();
         this.drawLives();
         this.drawPath();
+        this.drawSpells();
+        this.updateEnemies();
         this.backpack.refresh();
         this.gameOverText.setVisible(false);
         this.restartText.setVisible(false);

@@ -5,7 +5,7 @@ class GameScene extends Phaser.Scene {
         this.GAMEOVER = false;
 
     }
-    
+
     preload()
     {
         let that = this;
@@ -21,6 +21,14 @@ class GameScene extends Phaser.Scene {
         downKey = this.input.keyboard.addKey('s');  // Get key object
         leftKey = this.input.keyboard.addKey('a');  // Get key object
         rightKey = this.input.keyboard.addKey('d');  // Get key object
+
+        key1 = this.input.keyboard.addKey('ONE');  // Get key object
+        key2 = this.input.keyboard.addKey('TWO');  // Get key object
+        key3 = this.input.keyboard.addKey('THREE');  // Get key object
+        key4 = this.input.keyboard.addKey('FOUR');  // Get key object
+        key5 = this.input.keyboard.addKey('FIVE');  // Get key object
+        key6 = this.input.keyboard.addKey('SIX');  // Get key object
+        key7 = this.input.keyboard.addKey('SEVEN');  // Get key object
 
         this.hudScene = this.scene.get('HudScene');
         this.bootScene = this.scene.get('BootScene');
@@ -45,14 +53,15 @@ class GameScene extends Phaser.Scene {
         mediaService.setMusic('theme1');
         this.hudScene.hideHealthbar();
 
-
         this.restart=false;
 
         this.updatePath();// check the current path, see if we get a special level
 
         this.blocks = this.add.group();
         this.enemies = this.add.group();
+        this.pets = this.add.group();
         this.bullets = this.add.group();
+        this.shields = this.add.group();
         this.portals = this.add.group();
         this.starPortals = this.add.group();
         this.catchables = this.add.group();
@@ -156,6 +165,10 @@ class GameScene extends Phaser.Scene {
                 bp.type = "boss";
                 bp.goToLvl="boss4";
                 bp.play('starPortalClosed');
+
+                let SPG = this.findSpotOnGrid();
+                new SpiderQueen(this,g2Px(SPG[0]),g2Px(SPG[1]),{img:'spiderQueen'});
+
             }
 
             this.questItemPlaced=false;
@@ -165,6 +178,9 @@ class GameScene extends Phaser.Scene {
             this.placeMobs();
             this.placeEnemies();
             this.placeTraps();
+
+
+
         }
 
 
@@ -179,7 +195,7 @@ class GameScene extends Phaser.Scene {
         maxLives = this.player.maxLives;
         this.applyLevelBonuses();
         lives = lives>maxLives ? maxLives : lives;
-
+        //this.displaySpells();
 
 
         this.checkEnemies();
@@ -188,11 +204,15 @@ class GameScene extends Phaser.Scene {
 
         this.physics.add.collider(this.player, this.blocks);
         this.physics.add.collider(this.enemies, this.blocks);
+        this.physics.add.collider(this.pets, this.blocks);
+        this.physics.add.collider(this.enemies, this.shields);
         this.physics.add.collider(this.npcs, this.blocks);
         this.physics.add.collider(this.catchables, this.blocks);
         this.physics.add.collider(this.mobs, this.blocks);
         this.physics.add.overlap(this.bullets, this.blocks, function(bullet,block){ if(bullet.destroyOnHitWall) bullet.destroyIt(); });
+        this.physics.add.overlap(this.bullets, this.shields, function(bullet,shield){ if(bullet.faction!=shield.faction) bullet.destroyIt(); });
         this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, false,this);
+        this.physics.add.overlap(this.pets, this.enemies, this.petHitEnemy, false,this);
         this.physics.add.overlap(this.bullets, this.player, this.bulletHitPlayer, false,this);
         this.physics.add.overlap(this.player, this.enemies, this.hitEnemy,false,this);
         this.physics.add.overlap(this.player, this.catchables, this.hitCatchable,false,this);
@@ -203,9 +223,9 @@ class GameScene extends Phaser.Scene {
         this.makeEmitters();
 
 
-        this.shadowTexture = this.textures.createCanvas('theShadow', W, H);
-        this.lightSprite = this.add.image(0, 0, 'theShadow');
-        this.lightSprite.blendMode = Phaser.BlendModes.MULTIPLY;
+        // this.shadowTexture = this.textures.createCanvas('theShadow', W, H);
+        // this.lightSprite = this.add.image(0, 0, 'theShadow');
+        // this.lightSprite.blendMode = Phaser.BlendModes.MULTIPLY;
 
 
         this.addEvents();
@@ -215,6 +235,9 @@ class GameScene extends Phaser.Scene {
         this.overlapping = null;
         this.overlapCount=0;
 
+        if(this.player.myClass==='wizard' && curSpells.length===0){
+          new Loot(this,this.player.x,this.player.y-64,{invAdd:'scrollFireStorm',img:'scrollFireStorm',pop:true});
+        }
 
         this.saveGameState();
         this.events.emit('newLevel');
@@ -225,6 +248,7 @@ class GameScene extends Phaser.Scene {
         this.hitHurt = this.sound.add('hitHurt',{volume:.25});
         this.hitHurtPlr = this.sound.add('hitHurtPlr',{volume:.25});
         this.swordSound = this.sound.add('sword',{volume:.25});
+        this.failSound = this.sound.add('fail',{volume:.25});
 
     }
 
@@ -256,6 +280,7 @@ class GameScene extends Phaser.Scene {
             towns:towns,
             soldLamb:soldLamb,
             path:path,
+            curSpells:curSpells,
         }
 
         localStorage.setItem('crawlerData',JSON.stringify(myData));
@@ -265,7 +290,6 @@ class GameScene extends Phaser.Scene {
 
 
     gameRestart(){
-        enemies = 0;
         lvlId = null;
         this.bootScene.loadSavedGame();
         this.restart = true;
@@ -278,6 +302,8 @@ class GameScene extends Phaser.Scene {
         this.events.on('enemiesUpdated', this.checkEnemies, this);
         this.events.on('enemyDied', this.enemyDied, this);
         this.events.on('bossDied', this.bossDied, this);
+        this.events.on('spellClick', this.clickedSpell, this);
+        this.game.events.on('buyFail', this.playFail, this);
 //        gameEvents.on('test', this.testEvent, this);
 
     }
@@ -286,8 +312,21 @@ class GameScene extends Phaser.Scene {
         this.events.off('enemiesUpdated', this.checkEnemies);
         this.events.off('enemyDied', this.enemyDied);
         this.events.off('bossDied', this.bossDied);
+        this.events.off('spellClick', this.clickedSpell);
+        this.game.events.off('buyFail', this.playFail);
+
         //this.saveGameState();
 //        gameEvents.off('test', this.testEvent);
+    }
+
+    clickedSpell(idx){
+        if(this.player){
+          this.player.attackSpecial(idx);
+        }
+    }
+
+    playFail(){
+      this.failSound.play();
     }
 
     findInventoryItem(itemId){
@@ -301,6 +340,7 @@ class GameScene extends Phaser.Scene {
     }
 
     applyLevelBonuses(){
+        let spell=undefined;
         let potionsV = this.backpack.findAllItemsOfId("potionV");
         if(potionsV){
             maxLives+=potionsV.length;
@@ -312,18 +352,40 @@ class GameScene extends Phaser.Scene {
             if(lives>maxLives) lives = maxLives;
         }
 
+        // If you want to have spells based on inventory, clear them every level and don't delete them from inventory.
+        // You might also want to stop saving the spells, as only the inventory would matter.
+        // curSpells = [];
+
+        if(this.player && this.player.myClass==='rogue' && curSpells.length===0){
+          spell = getById(spells,'shadowForm',true);
+          curSpells.push(spell);
+        }
 
         this.player.bonusDamage = 0;
-        let items = this.backpack.getItems();
-        var i = items.length
+        let bpItems = this.backpack.getItems();
+        var i = bpItems.length
         while (i--) {
-            let theItem = items[i];
+            let bpItem = bpItems[i];
+            let theItem = getById(items,bpItem.id);// get the source data using the item id.
             this.player.bonusDamage += theItem.bonusDamage || 0;
             if(theItem.id==='apple' && lives<maxLives){
                 lives ++;
                 this.backpack.removeItemByIndex(i);
             }
+
+
+            if(theItem.grantSpell){
+                spell = getById(spells,theItem.grantSpell,true);
+                if(curSpells.length < this.player.maxSpells){
+                  curSpells.push(spell);
+                  this.backpack.removeItemByIndex(i);// don't do this if you decide to base spells on inventory
+                }
+            }
+
+
+
         }
+
 
     }
 
@@ -356,6 +418,7 @@ class GameScene extends Phaser.Scene {
     }
 
     playerTouchStarPortal(player,portal){
+            if(enemies>0) return false;
             if(this.backpack.hasItem('starKey')){
                 if(!this.overlapping){
                     this.overlapping=portal;
@@ -389,6 +452,17 @@ class GameScene extends Phaser.Scene {
                     new Loot(this,xx,yy,{img:'coinSpin',anm:'coinSpin',pop:true,gold:1});
                 }
             }
+
+            let rareDropOdds = 30;
+            if(enemyKey==='evilTree' || enemyKey==='giant'){
+              rareDropOdds = 5;
+            }
+            let rareItems = ["scrollIceShield","scrollFireStorm"];
+            if(Phaser.Math.Between(1,rareDropOdds)===rareDropOdds){
+              let lootIdx = rareItems[Phaser.Math.Between(0,rareItems.length-1)]
+              new Loot(this,xx,yy,{invAdd:lootIdx,img:lootIdx,pop:true});
+            }
+
             this.checkEnemies();
     }
 
@@ -473,6 +547,7 @@ class GameScene extends Phaser.Scene {
     hitEnemy(player,enemy)
     {
         if(!enemy.canHitPlayer){ return false }
+        if(!player.canBeDamaged){return false}
         if(enemy.attackCoolTimer<=0){
             enemy.attackCoolTimer=30;
             this.emitter1.emitParticleAt(enemy.x, enemy.y, 10);
@@ -536,7 +611,7 @@ class GameScene extends Phaser.Scene {
         if(bullet.faction===0 && !bullet.hasHit(enemy)){
             enemy.applyKb(bullet.angle,bullet.kb);
             enemy.applyDamage(bullet.damage);
-
+            this.hitHurt.play();
             this.emitter1.emitParticleAt(bullet.x, bullet.y, 10);
             if(bullet.destroyOnHit){
                 bullet.destroyIt();
@@ -547,8 +622,19 @@ class GameScene extends Phaser.Scene {
 
     }
 
+    petHitEnemy(pet,enemy){
+
+      if(pet.attackCoolTimer<=0){
+          pet.attackCoolTimer=30;
+          this.emitter1.emitParticleAt(enemy.x, enemy.y, 10);
+          enemy.applyDamage(pet.attackDamage);
+      }
+
+    }
+
     bulletHitPlayer(bullet,player)
     {
+        if(!player.canBeDamaged) return false;
         if(bullet.faction===1){
             player.applyDamage(bullet.damage);
 
@@ -597,7 +683,7 @@ class GameScene extends Phaser.Scene {
 //        this.overlapping=false;
         if(this.quipText.alpha>0) this.quipText.alpha -= .015;
 
-        this.updateTexture();
+        // this.updateTexture();
     }
 
     setQuipText(xx,yy,txt){
@@ -606,7 +692,7 @@ class GameScene extends Phaser.Scene {
         this.quipText.y = yy;
         this.quipText.setText(txt).setAlpha(1);
     }
-    
+
     gameOver()
     {
         this.GAMEOVER = true;
@@ -1078,8 +1164,19 @@ class GameScene extends Phaser.Scene {
         let RC = this.findSpotOnGrid();
         new Vendor(this,g2Px(RC[0]),g2Px(RC[1]));
         this.gameGrid[RC[0]][RC[1]] = OCCUPIED;
-                let apple = items.filter(function(m) { return  m.id=="apple"; })
-                this.store.setStoreItems(apple);
+                // let apple = items.filter(function(m) { return  m.id=="apple"; });
+                let initItems = [];
+                // let apple = getById(items,'apple');
+                initItems.push(getById(items,'apple'));
+                let rareOdds = 5;
+                if(Phaser.Math.Between(1,rareOdds)===rareOdds){
+                  initItems.push(getById(items,'scrollFireStorm'));
+                }
+                if(Phaser.Math.Between(1,rareOdds)===rareOdds){
+                  initItems.push(getById(items,'scrollIceShield'));
+                }
+                this.store.setStoreItems(initItems);
+
 
         return true;
 
@@ -1224,7 +1321,6 @@ class GameScene extends Phaser.Scene {
                     anmDefault:'hogWalk',
                     anmTell:'hogTell',
                     anmAttack:'hogAttack',
-                    anmDie: 'hogTell',
                     attackDamage:2,
                     attackVelocity:260,
                     agroRange:200,
@@ -1318,4 +1414,8 @@ class GameScene extends Phaser.Scene {
 
 
             }
+
+        displaySpells(){
+          this.hudScene.drawSpells(curSpells);
+        }
 }

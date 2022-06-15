@@ -39,6 +39,12 @@ class BootScene extends Phaser.Scene{
         this.load.image('apple', 'img/apple.png');
         this.load.image('uiArrow', 'img/ui/uiArrow.png');
         this.load.image('starKey', 'img/starKey.png');
+        this.load.image('iceShieldIcon', 'img/iceShieldIcon.png');
+        this.load.image('scrollIceShield', 'img/scrollIceShield.png');
+        this.load.image('scrollFireStorm', 'img/scrollFireStorm.png');
+        this.load.image('shadowFormIcon', 'img/shadowFormIcon.png');
+        this.load.image('spiderAcidShot', 'img/spiderAcidShot.png');
+        this.load.image('spiderEgg', 'img/spiderEgg.png');
 
         // Spritesheets
         this.load.spritesheet('wizard1', 'img/wizard1.png',{ frameWidth: 32, frameHeight: 32 });
@@ -90,11 +96,16 @@ class BootScene extends Phaser.Scene{
         this.load.spritesheet('peasant2', 'img/peasant2.png',{ frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('starPortal', 'img/starPortal.png',{ frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('rogueDie', 'img/rogueDie.png',{ frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('iceShield', 'img/iceShield.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('spiderQueen', 'img/spiderQueen.png',{ frameWidth: 216, frameHeight: 136 });
+        this.load.spritesheet('spiderling', 'img/spiderling.png',{ frameWidth: 23, frameHeight: 23 });
 
         // Audio
         this.load.audio('theme1', 'audio/music/Togetherwearestronger.mp3');
         this.load.audio('boss1Theme', 'audio/music/TheMomentofTruth.mp3');
         this.load.audio('hitHurt', 'audio/sfx/Hit_Hurt7.mp3');
+        this.load.audio('fail', 'audio/sfx/Fail.mp3');
+
         this.load.audio('hitHurtPlr', 'audio/sfx/Hit_Hurtplr.mp3');
         this.load.audio('sword', 'audio/sfx/sword.mp3');
 //         this.load.audio('incoming1', 'audio/sfx/incoming1.mp3');
@@ -113,6 +124,7 @@ class BootScene extends Phaser.Scene{
         lives = saveData.lives || 10;
         gold = saveData.gold || 0;
         soldLamb = saveData.soldLamb || false;
+        curSpells = saveData.curSpells || [];
 //        path = saveData.path || [];//keep track of the portals passed through
         path=[];
 
@@ -132,7 +144,7 @@ class BootScene extends Phaser.Scene{
         towns = townsData.map(a => {return {...a}});
         tips = tipsData.map(a => {return {...a}});
         missions = missionsData.map(a => {return {...a}});
-
+        curSpells=[];
     }
 
     create ()
@@ -332,6 +344,12 @@ class BootScene extends Phaser.Scene{
             frames: this.anims.generateFrameNumbers('rogue', { start: 6, end: 23, first: 6 }),
             frameRate: 12,
             repeat: 0
+        };
+        animConfigs.shadowTwinTell = {
+            key: 'shadowTwinTell',
+            frames: this.anims.generateFrameNumbers('rogue', { start: 2, end: 2, first: 2 }),
+            frameRate: 4,
+            repeat: 1
         };
         animConfigs.rogueIdle = {
             key: 'rogueIdle',
@@ -812,6 +830,66 @@ class BootScene extends Phaser.Scene{
             key: 'starPortalClosed',
             frames: this.anims.generateFrameNumbers('starPortal', { start: 0, end: 0, first: 0 }),
             frameRate: 0,
+            repeat: 0
+        };
+        animConfigs.iceShield = {
+            key: 'iceShield',
+            frames: [
+                {key:'iceShield',frame:0,duration:3},
+                {key:'iceShield',frame:1,duration:3},
+                {key:'iceShield',frame:2,duration:3},
+                {key:'iceShield',frame:3,duration:3},
+                {key:'iceShield',frame:2,duration:3},
+                {key:'iceShield',frame:1,duration:3},
+            ],
+            repeat: -1
+        };
+
+        animConfigs.spiderQueenWalk = {
+            key: 'spiderQueenWalk',
+            frames: this.anims.generateFrameNumbers('spiderQueen', { start: 0, end: 4, first: 0 }),
+            frameRate: 12,
+            repeat: -1
+        };
+
+        animConfigs.spiderQueenTell = {
+            key: 'spiderQueenTell',
+            frames: this.anims.generateFrameNumbers('spiderQueen', { start: 0, end: 0, first: 0 }),
+            frameRate: 8,
+            repeat: 4
+        };
+
+        animConfigs.spiderQueenAttack = {
+            key: 'spiderQueenAttack',
+            frames: [
+              {key:'spiderQueen',frame:4,duration:300},
+              {key:'spiderQueen',frame:0,duration:100},
+              {key:'spiderQueen',frame:4,duration:10},
+            ],
+            repeat: 0
+        };
+
+        //spiderling
+        animConfigs.spiderlingWalk = {
+            key: 'spiderlingWalk',
+            frames: this.anims.generateFrameNumbers('spiderling', { start: 0, end: 7, first: 0 }),
+            frameRate: 21,
+            repeat: -1
+        };
+
+        animConfigs.spiderlingTell = {
+            key: 'spiderlingTell',
+            frames: [
+              {key:'spiderling',frame:4,duration:500},
+            ],
+            repeat: 0
+        };
+
+        animConfigs.spiderlingAttack = {
+            key: 'spiderlingAttack',
+            frames: [
+              {key:'spiderling',frame:0,duration:400},
+            ],
             repeat: 0
         };
 

@@ -4,32 +4,42 @@ class Gun extends Phaser.GameObjects.Sprite {
     constructor(scene, x, y, config = {}) {
         super(scene, x, y, config.hasOwnProperty('img') ? config.img : 'square');
         scene.add.existing(this);
-
         this.myScene = scene;
         this.initSpeed=128;
-
         this.myDelay = 250;
-        this.nextShoot = this.myDelay;
+        scene.updateGroup.add(this);
+
+        this.init();
+        this.updateConfig();
+
     }
 
-        update(time,delta){
 
-    		this.nextShoot--;
-    		if(this.nextShoot<1){
-    			this.nextShoot = this.myDelay;
-    			this.shoot();
-    		}
+    update(time,delta){
 
-        }
+      this.nextShoot--;
+      if(this.nextShoot<1){
+      	this.nextShoot = this.myDelay;
+      	this.shoot();
+      }
 
-       shoot(){
+    }
 
-            let bullet = new Bullet(this.myScene,this.x,this.y,this.angle,{anm:'fireball',img:'fireball'});
+    shoot(){
 
-       }
+        let bullet = new Bullet(this.myScene,this.x,this.y,this.angle,{anm:'fireball',img:'fireball'});
 
-       init(){
+    }
 
-       }
+    init()
+    {
+
+    }
+
+    updateConfig()
+    {
+      this.nextShoot = this.myDelay;
+
+    }
 
 }

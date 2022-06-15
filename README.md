@@ -15,4 +15,10 @@ Missions are granted and completed through the NPC interact() method. An initial
 Each mission has status variables (started, completed), an associated NPC, text and items required for completion. Some missions are "random"
 in that they can be granted by random encounters in the wild. Non-random missions are reserved for specific events like boss fights.
 
+# Inventory
+Inventory is managed via a custom plugin called BackpackPlugin.
+
+# StorePlugin
+Store transactions and UI are handled by the custom StorePlugin
+
 # Spells
