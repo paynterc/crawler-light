@@ -12,7 +12,7 @@ class BossWizard extends Boss {
         this.anmAttack2 = 'badWizardAttack';
         this.attackVelocity = 200;
         this.agroRange=256;
-        this.hp=10;
+        this.hp=500;
         this.bulletDelay = 10;
         this.bulletTimer = this.bulletDelay;
 

@@ -11,6 +11,8 @@ class Player extends Phaser.GameObjects.Sprite {
         scene.physics.add.existing(this);
         this.body.setCollideWorldBounds(true);
 
+        this.myClass = config.plrClass || 'wizard';
+
         this.anmDefault = 'wizard1Idle';
         this.anmIdle = 'wizard1Idle';
         this.anmAttack = 'wizard1Attack';
@@ -20,8 +22,8 @@ class Player extends Phaser.GameObjects.Sprite {
         this.bdyW = 16;
         this.bdyH = 32;
         this.bdyX = 6;
-		this.bdyY = 0;
-		this.xOff = 0;
+    		this.bdyY = 0;
+    		this.xOff = 0;
 
         this.myState = STATE_EN_IDLE;
         this.faction = 0;
@@ -29,10 +31,22 @@ class Player extends Phaser.GameObjects.Sprite {
         this.maxVelocity = MAX_SPEED;
         this.maxLives = 5;
         this.bonusDamage = 0;
+        this.maxSpells=7;
+        this.shadowFormDuration = 3000;//try to do this with miliseconds and delta
+        this.shadowTimer=0;
+        this.canBeDamaged=true;
+
+        //{id:'iceShield',method:'makeIceShield',icon:'iceShieldIcon',cooldown:600,timer:0},
+        this.spells = [];
+        spellMap["makeIceShield"] = this.makeIceShield;
+        spellMap["makeFireStorm"] = this.makeFireStorm;
+        spellMap["makeShadowForm"] = this.makeShadowForm;
 
         this.init();
         this.updateConfig();
         this.setAnimationComplete();
+
+
     }
 
     setAnimationComplete(){
@@ -66,6 +80,21 @@ class Player extends Phaser.GameObjects.Sprite {
 
         this.myPreUpdate(time,delta);
         if(this.myAttackTimer>0) this.myAttackTimer--;
+        curSpells.forEach((spell, i) => {
+          if (spell.timer>0) {
+            spell.timer--;
+          }
+        });
+
+        if(this.shadowTimer>0){
+          this.shadowTimer-=delta;
+          if(this.shadowTimer<=0){
+              this.shadowTimer=0;
+              this.stopShadowForm();
+          }
+        }
+
+
         this.depth=this.y;
         switch (this.myState) {
             case STATE_EN_IDLE:
@@ -119,6 +148,8 @@ class Player extends Phaser.GameObjects.Sprite {
         }
     }
 
+
+
     checkInput(){
         if (fireInputIsActive()) {
             if(this.myAttackTimer<=0){
@@ -147,6 +178,14 @@ class Player extends Phaser.GameObjects.Sprite {
             }else {
                 this.body.acceleration.y = 0;
             }
+
+            if(Phaser.Input.Keyboard.JustDown(key1)) this.attackSpecial(0);
+            if(Phaser.Input.Keyboard.JustDown(key2)) this.attackSpecial(1);
+            if(Phaser.Input.Keyboard.JustDown(key3)) this.attackSpecial(2);
+            if(Phaser.Input.Keyboard.JustDown(key4)) this.attackSpecial(3);
+            if(Phaser.Input.Keyboard.JustDown(key5)) this.attackSpecial(4);
+            if(Phaser.Input.Keyboard.JustDown(key6)) this.attackSpecial(5);
+            if(Phaser.Input.Keyboard.JustDown(key7)) this.attackSpecial(6);
 
 
             if(this.body.velocity.x != 0 || this.body.velocity.y != 0){
@@ -180,6 +219,37 @@ class Player extends Phaser.GameObjects.Sprite {
 
     }
 
+    attackSpecial(idx){
+      let spell = curSpells[idx];
+      if(!spell) return false;
+      if (spell.timer<=0) {
+        spell.timer=spell.cooldown;
+        execFn(spell.method, this);
+      }
+    }
+
+    makeIceShield(){
+      let shield = new Shield(this.myScene,this.x,this.y,{anm:'iceShield'});
+    }
+    makeFireStorm(){
+        //instantiate firestorm
+      let fire = new Firestorm(this.myScene,this.x,this.y);
+    }
+    makeShadowForm(){
+        //instantiate firestorm
+      // this.shadowTimer=this.shadowFormDuration;
+      // this.canBeDamaged=false;
+      // this.setTint('0x000000');
+      new ShadowTwin(this.myScene,this.x+8,this.y);
+      new ShadowTwin(this.myScene,this.x-8,this.y);
+
+    }
+    stopShadowForm(){
+      this.canBeDamaged=true;
+      this.setTint('0xffffff');
+    }
+
+
     myPreUpdate(time,delta){
 
     }
@@ -191,6 +261,7 @@ class Player extends Phaser.GameObjects.Sprite {
     applyDamage(D){
         if(!D) return false
         if(this.myState === STATE_EN_DEAD) return false;
+        if(!this.canBeDamaged) return false;
         lives-=D;
         this.myScene.events.emit('playerTookDamage');
         this.myScene.hitHurtPlr.play();

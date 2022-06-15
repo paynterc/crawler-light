@@ -60,4 +60,13 @@ class EvilTree extends Enemy {
 
     }
 
+    onDestroy(){
+      let rareDropOdds = 5;
+      let rareItems = ["scrollIceShield","scrollFireStorm"];
+      if(Phaser.Math.Between(1,rareDropOdds)===rareDropOdds){
+        let lootIdx = rareItems[Phaser.Math.Between(0,rareItems.length-1)]
+        new Loot(this,this.x,this.y,{invAdd:lootIdx,img:lootIdx,pop:true});
+      }
+    }
+
 }

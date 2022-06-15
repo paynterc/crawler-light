@@ -18,6 +18,8 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.firedAttack = false;// only attack once per attack state
         this.attackDirection = 0;// which direction it will lunge
         this.oneHit = false;// only allow one hit per attack
+        this.attackTarget = null;
+        this.type = 'mob';//mob or trap
 
         // Config Items
         this.pathReactTime = 120;
@@ -108,6 +110,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         if(this.attackCoolTimer>0) this.attackCoolTimer--;
         if(this.myBumpTimer>0) this.myBumpTimer--;
         this.depth=this.y;
+        this.setTarget();
         switch (this.myState) {
             case STATE_EN_IDLE:
                 this.idle(time,delta);
@@ -152,6 +155,11 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 corpse.onDestroy = this.onCorpseDestroy;
             }
             corpse.play(this.anmDie);
+        }else{
+          let corpse = new CorpseSpinner(this.myScene,this.x,this.y,{'img':this.texture.key,'scale':this.myScale});
+          if(this.onCorpseDestroy){
+              corpse.onDestroy = this.onCorpseDestroy;
+          }
         }
 
         this.destroyIt();
@@ -178,7 +186,11 @@ class Enemy extends Phaser.GameObjects.Sprite {
         }
     }
 
-
+    setTarget(){
+      if(!this.attackTarget){
+        this.attackTarget = this.myScene.player;
+      }
+    }
 
     walk(time,delta){
         this.myState = STATE_EN_MOVE;
@@ -189,7 +201,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.checkPlayerTimer--;
         if(this.checkPlayerTimer<1){
             this.checkPlayerTimer=this.checkPlayerFrequency;
-            let D = Phaser.Math.Distance.Between(this.x,this.y,this.myScene.player.x,this.myScene.player.y);
+            let D = Phaser.Math.Distance.Between(this.x,this.y,this.attackTarget.x,this.attackTarget.y);
             if(D<=this.agroRange){
                 if(this.myAttackTimer<1){
                     this.myAttackTimer = this.myAttackFrequency;
@@ -227,6 +239,10 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     }
 
+    checkTarget(){
+
+    }
+
     tell(time,delta){
         this.myState = STATE_EN_TELL;
         this.body.setVelocity(0);
@@ -257,7 +273,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
     setAttackDirection(){
         // get direction to target.
-        this.attackDirection = Phaser.Math.Angle.Between(this.x,this.y,this.myScene.player.x,this.myScene.player.y);
+        this.attackDirection = Phaser.Math.Angle.Between(this.x,this.y,this.attackTarget.x,this.attackTarget.y);
     }
 
     fireAttack(){
@@ -276,7 +292,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         let xx = this.x + (this.bulletOffsetX * dir);
         let yy = this.y + this.bulletOffsetY;
 
-        let A = Phaser.Math.Angle.Between(xx,yy,this.myScene.player.x,this.myScene.player.y);
+        let A = Phaser.Math.Angle.Between(xx,yy,this.attackTarget.x,this.attackTarget.y);
         let bullet = new Bullet(this.myScene,xx,yy,A,this.bulletConfig);
     }
 
@@ -298,7 +314,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         if(this.hp<=0){
             this.die();
         }
-        this.myScene.hitHurt.play();
+
     }
 
     applyKb(angle,speed){

@@ -12,7 +12,6 @@ class BackpackPlugin extends Phaser.Plugins.BasePlugin {
     init (opts)
     {
 //        console.log('Plugin is alive');
-        console.log("BackpackPlugin INIT");
 
         if (!opts) opts = {};
         // set properties from opts object or use defaults
@@ -47,7 +46,7 @@ class BackpackPlugin extends Phaser.Plugins.BasePlugin {
         // eventEmitter.on('poststep', this.gamePostStep, this);
         // eventEmitter.on('prerender', this.gamePreRender, this);
         // eventEmitter.on('postrender', this.gamePostRender, this);
-        console.log("BackpackPlugin START");
+        // console.log("BackpackPlugin START");
 
     }
 
@@ -189,7 +188,6 @@ class BackpackPlugin extends Phaser.Plugins.BasePlugin {
             let itm = this.items[i];
             let img = this.drawScene.add.sprite(xx,yy,itm.img).setInteractive()
             .on('pointerover', function () {
-                console.log('itm',itm);
                 this.setScale(2);
                 if(itm.anm){this.play(itm.anm)}
                 that.itemTxt1.setText(itm.name);

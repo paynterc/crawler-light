@@ -32,9 +32,10 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
         this.orgY = config.orgY || 0;
         this.kb = config.kb || 0;
         this.doSetRotation = config.hasOwnProperty('doSetRotation') ? config.doSetRotation : true;
-
-
         this.myGroup = config.hasOwnProperty('myGroup') ? config.myGroup : scene.bullets;
+        if(config.hasOwnProperty('onDestroy')){
+          this.onDestroy = config.onDestroy;
+        }
 
 
         this.body.setAllowGravity(this.allowGrav);

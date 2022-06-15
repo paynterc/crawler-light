@@ -15,6 +15,7 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
         this.playerGold=0;
         this.goldText;
         this.emitter1;
+        this.storeDepth = 200000;
     }
 
 
@@ -122,11 +123,10 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
         this._hide();
     }
 
-    setStoreItems(items){
-        console.log('add store items',items);
+    setStoreItems(initItems){
         this.storeItems=[];
-        this.storeItems=items.map(a => {return {...a}});
-        this.storeItemsReal=items.map(a => {return {...a}});
+        this.storeItems=initItems.map(a => {return {...a}});
+        this.storeItemsReal=initItems.map(a => {return {...a}});
         console.log('storeItems',this.storeItems);
     }
     _setPlayerItems(items){
@@ -164,6 +164,7 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
 
         if(this.playerItems.length>=this.maxPlayerItems){
             //TODO: fail sound
+            this.eventEmitter.emit('buyFail');
             return false;
         }
         var idx = this.storeItems.findIndex(p => p.id==itemId);
@@ -171,6 +172,8 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
     	    var item = this.storeItems[idx];
             if(this.playerGold<item.price){
                 //TODO: fail sound
+                this.eventEmitter.emit('buyFail');
+
                 return false;
             }
     	    this.addItemToPlayer(item);
@@ -250,12 +253,19 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
         let that = this;
         for(let i=0;i<this.playerItems.length;i++){
             let itm = this.playerItems[i];
-            let img = this.drawScene.add.image(xx,yy,itm.img).setScale(this.scale);
+            let img = this.drawScene.add.image(xx,yy,itm.img).setScale(this.scale).setDepth(this.storeDepth+100);
             img.setInteractive().on('pointerdown', function(pointer, localX, localY, event){
                 if(that.sellItemById(itm.id)){
                     that.emitter1.emitParticleAt(pointer.x, pointer.y, itm.price);
                 }
+            }).on('pointerover', function () {
+              that.itemText1.setText(itm.name).setPosition(xx,yy-8).setVisible(true);
+              that.itemText2.setText(itm.price.toString() + ' G').setPosition(xx,yy+8).setVisible(true);
+            }).on('pointerout', function () {
+              that.itemText1.setText('').setVisible(false);
+              that.itemText2.setText('').setVisible(false);
             });
+
             this.itemImages.add(img);
             xx+=this.slotSz + padding;
         }
@@ -263,11 +273,17 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
         yy = this.yPos-64;
         for(let i=0;i<this.storeItems.length;i++){
             let itm = this.storeItems[i];
-            let img = this.drawScene.add.image(xx,yy,itm.img).setScale(2);
+            let img = this.drawScene.add.image(xx,yy,itm.img).setScale(2).setDepth(this.storeDepth+100);
             img.setInteractive().on('pointerdown', function(pointer, localX, localY, event){
                 if(that.buyItemById(itm.id)){
                     that.emitter1.emitParticleAt(pointer.x, pointer.y, itm.price);
                 }
+            }).on('pointerover', function () {
+              that.itemText1.setText(itm.name).setPosition(xx,yy-8).setVisible(true);
+              that.itemText2.setText(itm.price.toString() + ' G').setPosition(xx,yy+8).setVisible(true);
+            }).on('pointerout', function () {
+              that.itemText1.setText('').setVisible(false);
+              that.itemText2.setText('').setVisible(false);
             });
             this.storeItemImages.add(img);
             xx+=this.slotSz + padding;
@@ -276,10 +292,15 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
 
     _drawText(){
 
-        let sellText = this.drawScene.make.text({x:16,y:this.yPos,text:"sell",style:{font:"16px FourBitRegular"}});
-        let buyText = this.drawScene.make.text({x:16,y:this.yPos-64,text:"buy",style:{font:"16px FourBitRegular"}});
-        this.goldText = this.drawScene.make.text({x:16,y:32,text:"gold:" + this.playerGold.toString(),style:{font:"16px FourBitRegular"}});
+        let sellText = this.drawScene.make.text({x:16,y:this.yPos,text:"you",style:{font:"16px FourBitRegular"}}).setDepth(this.storeDepth+100);
+        let buyText = this.drawScene.make.text({x:16,y:this.yPos-64,text:"store",style:{font:"16px FourBitRegular"}}).setDepth(this.storeDepth+100);
+        this.goldText = this.drawScene.make.text({x:16,y:32,text:"gold:" + this.playerGold.toString(),style:{font:"16px FourBitRegular"}}).setDepth(this.storeDepth+100);
 
+        this.itemText1 = this.drawScene.make.text({x:16,y:this.yPos,text:"",style:{font:"16px FourBitRegular"}}).setDepth(this.storeDepth+100)
+        .setVisible(false);
+
+        this.itemText2 = this.drawScene.make.text({x:16,y:this.yPos,text:"",style:{font:"12px FourBitRegular"}}).setDepth(this.storeDepth+100)
+        .setVisible(false);
 
         this.storeTexts.add(sellText);
         this.storeTexts.add(buyText);
@@ -297,7 +318,7 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
               font: '16px FourBitRegular',
             }
         });
-        this.closeBtn.setInteractive();
+        this.closeBtn.setInteractive().setDepth(this.storeDepth+100);
         this.closeBtn.on('pointerover', function () {
             this.setTint(0x00FF00);
         });
@@ -319,7 +340,7 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
               font: '16px FourBitRegular',
             }
         });
-        this.confirmBtn.setInteractive();
+        this.confirmBtn.setInteractive().setDepth(this.storeDepth+100);
         this.confirmBtn.on('pointerover', function () {
             this.setTint(0xff0000);
         });
@@ -333,10 +354,10 @@ class StorePlugin extends Phaser.Plugins.BasePlugin {
 
     _createInnerWindow() {
       this.graphics.fillStyle(this.windowColor, this.windowAlpha);
-      this.graphics.fillRect(32, 32, this._getGameWidth()-64, this._getGameHeight()-64);
+      this.graphics.fillRect(32, 32, this._getGameWidth()-64, this._getGameHeight()-64).setDepth(this.storeDepth+50);
     }
     _createOuterWindow() {
       this.graphics.lineStyle(12, this.windowFrameColor, 1);
-      this.graphics.strokeRect(32, 32, this._getGameWidth()-64, this._getGameHeight()-64);
+      this.graphics.strokeRect(32, 32, this._getGameWidth()-64, this._getGameHeight()-64).setDepth(this.storeDepth);
     }
 }

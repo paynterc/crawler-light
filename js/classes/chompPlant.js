@@ -10,6 +10,7 @@ class ChompPlant extends Enemy {
         this.anmTell = 'chompPlantTell';
         this.anmAttack = 'chompPlantAttack';
         this.anmDie = 'chompPlantIdle';
+        this.type = 'trap';//mob or trap
 
         this.attackVelocity = 0;
         this.maxVelocity=0;
